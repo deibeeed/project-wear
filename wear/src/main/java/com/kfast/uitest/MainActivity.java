@@ -231,13 +231,13 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
         ivSettings.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                startActivity(new Intent(v.getContext(), ConfigActivity.class));
-                File file = new File(getExternalCacheDir(), "img");
-
-                if(file.exists())
-                    Toast.makeText(v.getContext(), "img exists", Toast.LENGTH_SHORT).show();
-                else
-                    Toast.makeText(v.getContext(), "img does not exists", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(v.getContext(), ConfigActivity.class));
+//                File file = new File(getExternalCacheDir(), "img");
+//
+//                if(file.exists())
+//                    Toast.makeText(v.getContext(), "img exists", Toast.LENGTH_SHORT).show();
+//                else
+//                    Toast.makeText(v.getContext(), "img does not exists", Toast.LENGTH_SHORT).show();
             }
         });
 	}
