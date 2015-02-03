@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animation-list xmlns:android="http://schemas.android.com/apk/res/android"
+    android:oneshot="false" >
+
+    <item
+        android:drawable="@drawable/Walking_a/Walking_a0001"
+        android:duration="200"/>
+    <item
+        android:drawable="@drawable/walking_a/walking_a0002"
+        android:duration="200"/>
+    <item
+        android:drawable="@drawable/walking_a/walking_a0003"
+        android:duration="200"/>
+    <item
+        android:drawable="@drawable/walking_a/walking_a0004"
+        android:duration="200"/>
+    <item
+        android:drawable="@drawable/walking_a/walking_a0005"
+        android:duration="200"/>
+    <item
+        android:drawable="@drawable/walking_a/walking_a0006"
+        android:duration="200"/>
+    <item
+        android:drawable="@drawable/walking_a/walking_a0007"
+        android:duration="200"/>
+    <item
+        android:drawable="@drawable/walking_a/walking_a0008"
+        android:duration="200"/>
+    <item
+        android:drawable="@drawable/walking_a/walking_a0009"
+        android:duration="200"/>
+    <item
+        android:drawable="@drawable/walking_a/walking_a0010"
+        android:duration="200"/>
+
+    <item
+        android:drawable="@drawable/walking_a/walking_a0011"
+        android:duration="200"/>
+    <item
+        android:drawable="@drawable/walking_a/walking_a00012"
+        android:duration="200"/>
+    <item
+        android:drawable="@drawable/walking_a/walking_a0013"
+        android:duration="200"/>
+    <item
+        android:drawable="@drawable/walking_a/walking_a0014"
+        android:duration="200"/>
+    <item
+        android:drawable="@drawable/walking_a/walking_a0015"
+        android:duration="200"/>
+    <item
+        android:drawable="@drawable/walking_a/walking_a0016"
+        android:duration="200"/>
+    <item
+        android:drawable="@drawable/walking_a/walking_a0017"
+        android:duration="200"/>
+    <item
+        android:drawable="@drawable/walking_a/walking_a0018"
+        android:duration="200"/>
+    <item
+        android:drawable="@drawable/walking_a/walking_a0019"
+        android:duration="200"/>
+    <item
+        android:drawable="@drawable/walking_a/walking_a0020"
+        android:duration="200"/>
+</animation-list>

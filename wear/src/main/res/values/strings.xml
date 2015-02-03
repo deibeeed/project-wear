@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">UITest</string>
+    <string name="hello_round">Hello Round World!</string>
+    <string name="hello_square">Hello Square World!</string>
+    <string name="title_activity_config">ConfigActivity</string>
+    <string name="title_activity_custom_confirmation_activty">CustomConfirmationActivty</string>
+    <string name="title_activity_choice">ChoiceActivity</string>
+
+</resources>

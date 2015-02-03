@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:keepScreenOn="true"
+    tools:context="com.mike.demowearapp.MainActivity"
+    tools:deviceIds="wear" >
+    
+	<!-- Layout Options-->
+    <LinearLayout
+        android:id="@+id/layout_top"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:layout_alignParentBottom="false"
+        android:layout_alignParentLeft="false"
+        android:layout_alignParentTop="true"
+        android:layout_centerInParent="true"
+        android:alpha=".8"
+        android:background="#FF0000"
+        android:content="@+id/contentt"
+        android:gravity="top"
+        android:orientation="vertical" >
+
+        <TextView
+            android:id="@+id/contentt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Go Up!" />
+
+        <Button
+            android:id="@+id/button_u1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center"
+            android:clickable="false"
+            android:text="Up" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layout_bottom"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="false"
+        android:layout_alignParentTop="false"
+        android:layout_centerInParent="true"
+        android:alpha=".8"
+        android:background="#00FF00"
+        android:content="@+id/contentb"
+        android:gravity="bottom"
+        android:orientation="vertical" >
+
+        <TextView
+            android:id="@+id/contentb"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Go down!" />
+
+        <Button
+            android:id="@+id/button_d1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center"
+            android:clickable="false"
+            android:text="Down" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layout_left"
+        android:layout_width="120dp"
+        android:layout_height="match_parent"
+        android:layout_alignParentBottom="false"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="false"
+        android:layout_centerInParent="true"
+        android:alpha=".8"
+        android:background="#0000FF"
+        android:content="@+id/contentl"
+        android:gravity="left"
+        android:orientation="vertical" >
+
+        <TextView
+            android:id="@+id/contentl"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Go Left!" />
+
+        <Button
+            android:id="@+id/button_l1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center"
+            android:clickable="false"
+            android:text="Left" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layout_right"
+        android:layout_width="120dp"
+        android:layout_height="match_parent"
+        android:layout_alignParentBottom="false"
+        android:layout_alignParentLeft="false"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="false"
+        android:alpha=".8"
+        android:background="#FFFF00"
+        android:content="@+id/contentr"
+        android:gravity="right"
+        android:orientation="vertical" >
+
+        <TextView
+            android:id="@+id/contentr"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Go right!" />
+
+        <Button
+            android:id="@+id/button_r1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center"
+            android:clickable="false"
+            android:text="Right" />
+    </LinearLayout>
+
+    <DigitalClock
+        android:id="@+id/clock"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:text="DigitalClock" />
+
+    <ProgressBar
+        android:id="@+id/progress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:max="100"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true" />
+
+    <ImageView
+        android:id="@+id/canvas"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/progress"
+        android:layout_below="@id/clock" />
+
+    <android.support.wearable.view.DismissOverlayView
+        android:id="@+id/dismiss"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true" />
+
+</RelativeLayout>
