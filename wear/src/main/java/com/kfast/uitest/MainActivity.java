@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.AnimationDrawable;
@@ -13,11 +14,11 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
-import android.support.wearable.activity.ConfirmationActivity;
 import android.support.wearable.view.DismissOverlayView;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -35,17 +36,23 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.ActivityRecognitionApi;
+import com.google.android.gms.plus.Plus;
 import com.google.android.gms.wearable.Asset;
 import com.google.android.gms.wearable.DataApi;
 import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.DataMapItem;
+import com.google.android.gms.wearable.Node;
+import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
+import com.kfast.uitest.receiver.ActivityRecognitionReceiver;
+import com.kfast.uitest.service.ActivityRecognitionIntentService;
 import com.kfast.uitest.util.Config;
 
-import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -58,15 +65,7 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
 
     private REQUEST_TYPE mRequestType;
 
-	private static final int HOLD_STILL_B = R.drawable.hold_still_b;
-	private static final int WALKING = R.drawable.walking;
-    private static final int HOLD_STILL_A = R.drawable.hold_still_a;
-    private static final int EAT_A_TREAT = R.drawable.eat_a_treat;
-    private static final int PLAY_DEAD = R.drawable.play_dead;
-    private static final int ROLL_OVER = R.drawable.roll_over;
-    private static final int RUNNING = R.drawable.running;
-    private static final int SCRATCHING = R.drawable.scratching;
-    private static final int SMILE = R.drawable.smile;
+    private static final String MESSAGE_PATH = "/start/activity-recognition";
 
 	private SimpleGestureFilter gestureFilter;
 	private DismissOverlayView dismissOverlay;
@@ -125,7 +124,7 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
 		initSensors();
 //		hideSlideLayouts();
 		initSlideLayoutAnimation();
-		playAnimalAnim(HOLD_STILL_B);
+		playAnimalAnim(R.drawable.hold_still_b);
 
         //initialize google client
         initGoogleApiClient();
@@ -139,18 +138,90 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
                             .addApi(Wearable.API)
                             .build();
 
-        recognitionClient = new GoogleApiClient.Builder(this)
-                .addApi(ActivityRecognition.API)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .build();
+        wearClient.connect();
 
-        Intent intent = new Intent(this, ActivityRecognitionIntentService.class);
-        mActivityRecognitionPendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        if(hasGPS()){
+            recognitionClient = new GoogleApiClient.Builder(this)
+                    .addApi(ActivityRecognition.API)
+                    .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
+                        @Override
+                        public void onConnected(Bundle bundle) {
+                            Log.d("recognition_client", "connected");
 
-        recognitionApi = ActivityRecognition.ActivityRecognitionApi;
+                            switch (mRequestType){
+                                case START:
+                                    recognitionApi.requestActivityUpdates(recognitionClient, DETECTION_INTERVAL_MILLISECONDS, mActivityRecognitionPendingIntent);
+//                ActivityRecognitionResult activityResult = (ActivityRecognitionResult) recognitionApi.requestActivityUpdates(recognitionClient, DETECTION_INTERVAL_MILLISECONDS, mActivityRecognitionPendingIntent);
+                                    break;
+                                case STOP:
+                                    recognitionApi.removeActivityUpdates(recognitionClient, mActivityRecognitionPendingIntent);
+                                    break;
+                            }
 
-        startUpdates();
+
+                            mInProgress = false;
+                            recognitionClient.disconnect();
+                        }
+
+                        @Override
+                        public void onConnectionSuspended(int i) {
+                            Log.d("recognition_client", "connection suspended");
+                        }
+                    })
+                    .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
+                        @Override
+                        public void onConnectionFailed(ConnectionResult connectionResult) {
+                            Log.d("recognition_client", "connection failed");
+                            mInProgress = false;
+
+                            if(connectionResult.hasResolution()){
+                                try {
+                                    connectionResult.startResolutionForResult(MainActivity.this, CONNECTION_FAILURE_RESOLUTION_REQUEST);
+                                } catch (IntentSender.SendIntentException e) {
+                                    e.printStackTrace();
+                                }
+                            }else{
+                                int errorCode = connectionResult.getErrorCode();
+                                Toast.makeText(MainActivity.this, GooglePlayServicesUtil.getErrorString(errorCode), Toast.LENGTH_SHORT).show();
+//            }
+                            }
+                        }
+                    })
+                    .build();
+
+            Intent intent = new Intent(/*Intent.ACTION_SYNC, null,*/ this, ActivityRecognitionIntentService.class);
+            ActivityRecognitionReceiver resultReceiver = new ActivityRecognitionReceiver(new Handler());
+            resultReceiver.setReceiver(new ActivityRecognitionReceiver.Receiver() {
+                @Override
+                public void onReceivedResult(int resultCode, Bundle resultData) {
+                    if(resultCode == RESULT_OK){
+                        Toast.makeText(MainActivity.this, "activity: " + resultData.getString("activity"), Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+
+            intent.putExtra("receiver", resultReceiver);
+            mActivityRecognitionPendingIntent = PendingIntent.getService(this, 1000, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+            recognitionApi = ActivityRecognition.ActivityRecognitionApi;
+
+            startUpdates();
+        }else{
+            new AsyncTask<Void, Void, Void>(){
+
+                @Override
+                protected Void doInBackground(Void... params) {
+                    Collection<String> nodes = getNodes();
+
+                    for(String node : nodes){
+                        Log.d("node", "node id: " + node);
+                        Wearable.MessageApi.sendMessage(wearClient, node, MESSAGE_PATH, new byte[0]);
+                    }
+                    return null;
+                }
+            }.execute();
+
+        }
     }
 
     public void startUpdates(){
@@ -162,6 +233,8 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
 
         if(!mInProgress){
             recognitionClient.connect();
+            if(recognitionClient.isConnected())
+                Log.d("recognition_client", "connected");
         }else {
 
         }
@@ -203,6 +276,25 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
         }
     }
 
+    private boolean hasGPS(){
+        return getPackageManager().hasSystemFeature(PackageManager.FEATURE_LOCATION_GPS);
+    }
+
+    private Collection<String> getNodes(){
+        if(!wearClient.isConnected())
+            wearClient.connect();
+
+        HashSet<String> results = new HashSet<String>();
+
+        NodeApi.GetConnectedNodesResult nodes = Wearable.NodeApi.getConnectedNodes(wearClient).await();
+
+        for(Node node : nodes.getNodes()){
+            results.add(node.getId());
+        }
+
+        return results;
+    }
+
 	private void initGestureFilter() {
 		gestureFilter = new SimpleGestureFilter(this, this);
 	}
@@ -214,6 +306,7 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
         ivSettings = (ImageView) findViewById(R.id.ivSettings);
 //		initSlideLayouts();
 
+        listAnimIds.add(R.drawable.scratch_the_ear);
         listAnimIds.add(R.drawable.sitting);
         listAnimIds.add(R.drawable.hold_still_b);
         listAnimIds.add(R.drawable.scratching);
@@ -232,12 +325,6 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(v.getContext(), ConfigActivity.class));
-//                File file = new File(getExternalCacheDir(), "img");
-//
-//                if(file.exists())
-//                    Toast.makeText(v.getContext(), "img exists", Toast.LENGTH_SHORT).show();
-//                else
-//                    Toast.makeText(v.getContext(), "img does not exists", Toast.LENGTH_SHORT).show();
             }
         });
 	}
@@ -307,6 +394,8 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
         switch (requestCode){
             case CONNECTION_FAILURE_RESOLUTION_REQUEST:
                 //connect again
+                recognitionClient.connect();
+                Log.d("google_api_client", "activity result");
 
                 switch (resultCode){
                     case RESULT_OK:
@@ -352,51 +441,51 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
 
 		switch (direction) {
 		case SimpleGestureFilter.SWIPE_LEFT:
-//            if(petHappiness >= (Config.PROGRESS_BAR_STEPS * .25)) {
-//                Toast.makeText(this, "Hoooray! Swipe Left trick unlocked!", Toast.LENGTH_SHORT).show();
-//                playAnimalAnim(R.drawable.fetch);
-//
-//                if(petHappiness < Config.NUM_STEPS_TO_TRIGGER_MORAL_LOSS)
-//                    petHappiness++;
-//            }
-//            else
-//                Toast.makeText(this, "You have not unlock this trick!", Toast.LENGTH_SHORT).show();
-            Toast.makeText(this, "IDLE TIME = " + Config.IDLE_TIME, Toast.LENGTH_SHORT).show();
+            if(petHappiness >= (Config.PROGRESS_BAR_STEPS * .25)) {
+                Toast.makeText(this, "Hoooray! Swipe Left trick unlocked!", Toast.LENGTH_SHORT).show();
+                playAnimalAnim(R.drawable.fetch);
+
+                if(petHappiness < Config.NUM_STEPS_TO_TRIGGER_MORAL_LOSS)
+                    petHappiness++;
+            }
+            else
+                Toast.makeText(this, "You have not unlock this trick!", Toast.LENGTH_SHORT).show();
+//            Toast.makeText(this, "IDLE TIME = " + Config.IDLE_TIME, Toast.LENGTH_SHORT).show();
 			break;
 		case SimpleGestureFilter.SWIPE_UP:
-//            if(petHappiness >= (Config.PROGRESS_BAR_STEPS * .75)) {
-//                Toast.makeText(this, "Hoooray! Swipe Up trick unlocked!", Toast.LENGTH_SHORT).show();
-//                playAnimalAnim(R.drawable.roll_over);
-//
-//                if(petHappiness < Config.NUM_STEPS_TO_TRIGGER_MORAL_LOSS)
-//                    petHappiness++;
-//            }
-//            else
-//                Toast.makeText(this, "You have not unlock this trick!", Toast.LENGTH_SHORT).show();
-            Toast.makeText(this, "NUM STEPS TO TRIGGER MORAL LOSS = " + Config.NUM_STEPS_TO_TRIGGER_MORAL_LOSS, Toast.LENGTH_SHORT).show();
+            if(petHappiness >= (Config.PROGRESS_BAR_STEPS * .75)) {
+                Toast.makeText(this, "Hoooray! Swipe Up trick unlocked!", Toast.LENGTH_SHORT).show();
+                playAnimalAnim(R.drawable.roll_over);
+
+                if(petHappiness < Config.NUM_STEPS_TO_TRIGGER_MORAL_LOSS)
+                    petHappiness++;
+            }
+            else
+                Toast.makeText(this, "You have not unlock this trick!", Toast.LENGTH_SHORT).show();
+//            Toast.makeText(this, "NUM STEPS TO TRIGGER MORAL LOSS = " + Config.NUM_STEPS_TO_TRIGGER_MORAL_LOSS, Toast.LENGTH_SHORT).show();
 			break;
 		case SimpleGestureFilter.SWIPE_RIGHT:
-//            if(petHappiness >= (Config.PROGRESS_BAR_STEPS * .50)) {
-//                Toast.makeText(this, "Hoooray! Swipe Right trick unlocked!", Toast.LENGTH_SHORT).show();
-//                playAnimalAnim(R.drawable.play_dead);
-//
-//                if(petHappiness < Config.NUM_STEPS_TO_TRIGGER_MORAL_LOSS)
-//                    petHappiness++;
-//            }
-//            else
-//                Toast.makeText(this, "You have not unlock this trick!", Toast.LENGTH_SHORT).show();
-            Toast.makeText(this, "PROGRESS BAR STEPS = " + Config.PROGRESS_BAR_STEPS, Toast.LENGTH_SHORT).show();
+            if(petHappiness >= (Config.PROGRESS_BAR_STEPS * .50)) {
+                Toast.makeText(this, "Hoooray! Swipe Right trick unlocked!", Toast.LENGTH_SHORT).show();
+                playAnimalAnim(R.drawable.play_dead);
+
+                if(petHappiness < Config.NUM_STEPS_TO_TRIGGER_MORAL_LOSS)
+                    petHappiness++;
+            }
+            else
+                Toast.makeText(this, "You have not unlock this trick!", Toast.LENGTH_SHORT).show();
+//            Toast.makeText(this, "PROGRESS BAR STEPS = " + Config.PROGRESS_BAR_STEPS, Toast.LENGTH_SHORT).show();
 			break;
 		case SimpleGestureFilter.SWIPE_DOWN:
-//            if(petHappiness >= Config.PROGRESS_BAR_STEPS) {
-//                Toast.makeText(this, "Hoooray! Swipe down trick unlocked!", Toast.LENGTH_SHORT).show();
-//                playAnimalAnim(R.drawable.scratch_the_ear);
-//
-//                if(petHappiness < Config.NUM_STEPS_TO_TRIGGER_MORAL_LOSS)
-//                    petHappiness++;
-//            }
-//            else
-//                Toast.makeText(this, "You have not unlock this trick!", Toast.LENGTH_SHORT).show();
+            if(petHappiness >= Config.PROGRESS_BAR_STEPS) {
+                Toast.makeText(this, "Hoooray! Swipe down trick unlocked!", Toast.LENGTH_SHORT).show();
+                playAnimalAnim(R.drawable.scratch_the_ear);
+
+                if(petHappiness < Config.NUM_STEPS_TO_TRIGGER_MORAL_LOSS)
+                    petHappiness++;
+            }
+            else
+                Toast.makeText(this, "You have not unlock this trick!", Toast.LENGTH_SHORT).show();
 			break;
 		}
 
@@ -428,14 +517,14 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
 
 	@Override
 	public void onDoubleTap() {
-		playAnimalAnim(HOLD_STILL_B);
+		playAnimalAnim(R.drawable.hold_still_b);
 //		hideSlideLayouts();
 	}
 
 	@Override
 	public void onSingleTapConfirmed() {
 //		hideSlideLayouts();
-        playAnimalAnim(EAT_A_TREAT);
+        playAnimalAnim(R.drawable.eat_a_treat);
 	}
 
 	@Override
@@ -448,7 +537,9 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
     @Override
     protected void onStart() {
         super.onStart();
-        wearClient.connect();
+
+        if(!wearClient.isConnected())
+            wearClient.connect();
     }
 
 
@@ -457,18 +548,7 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
     public void onConnected(Bundle bundle) {
         Log.d("wear device", "wear api connected");
         Wearable.DataApi.addListener(wearClient, this);
-//        switch (mRequestType){
-//            case START:
-//                recognitionApi.requestActivityUpdates(recognitionClient, DETECTION_INTERVAL_MILLISECONDS, mActivityRecognitionPendingIntent);
-////                ActivityRecognitionResult activityResult = (ActivityRecognitionResult) recognitionApi.requestActivityUpdates(recognitionClient, DETECTION_INTERVAL_MILLISECONDS, mActivityRecognitionPendingIntent);
-//                break;
-//            case STOP:
-//                recognitionApi.removeActivityUpdates(recognitionClient, mActivityRecognitionPendingIntent);
-//                break;
-//        }
-//
-//        mInProgress = false;
-//        recognitionClient.disconnect();
+
     }
 
     @Override
@@ -478,72 +558,64 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
-        mInProgress = false;
 
-        if(connectionResult.hasResolution()){
-            try {
-                connectionResult.startResolutionForResult(this, CONNECTION_FAILURE_RESOLUTION_REQUEST);
-            } catch (IntentSender.SendIntentException e) {
-                e.printStackTrace();
-            }
-        }else{
-            int errorCode = connectionResult.getErrorCode();
-            Toast.makeText(this, GooglePlayServicesUtil.getErrorString(errorCode), Toast.LENGTH_SHORT).show();
-//            Dialog errorDialog = GooglePlayServicesUtil.getErrorDialog(errorCode, this, CONNECTION_FAILURE_RESOLUTION_REQUEST);
-//
-//            if(errorDialog != null){
-//                ErrorDialogFragment errorFragment = new ErrorDialogFragment();
-//                errorFragment.setDialog(errorDialog);
-//                errorFragment.show(getSupportFragmentManager(), "Connection Failed");
-//            }
-        }
+
     }
 
     @Override
     public void onDataChanged(DataEventBuffer dataEvents) {
         for(DataEvent event : dataEvents){
             DataMapItem item = DataMapItem.fromDataItem(event.getDataItem());
-            Log.d("from phone data", "uri from  phone data: " + event.getDataItem().getUri() + ", Message: " + item.getDataMap().getString("message_service"));
+            Log.d("from phone data", "uri from  phone data: " + event.getDataItem().getUri() + ", Message: " + item.getDataMap().getString("activityName"));
 
-//            Toast.makeText(this, ", Message: " + item.getDataMap().getString("message_service"), Toast.LENGTH_LONG).show();
-            canvas.setImageBitmap(loadBitmapFromAsset(item.getDataMap().getAsset("img")));
-            if(item.getUri().toString().contains("/test-service")){
-                final String message = item.getDataMap().getString("message_service");
+            if(item.getUri().toString().contains("/activity-recognized")){
+                final String activityName = item.getDataMap().getString("activityName");
                 int activityType = item.getDataMap().getInt("activityType");
 
 //                switch (activityType){
 //                    case DetectedActivity
 //                }
 
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if(message.equalsIgnoreCase("walking")) {
-                            handler.removeCallbacksAndMessages(null);
-                            playAnimalAnim(WALKING);
-                        }else if(message.equalsIgnoreCase("running")){
-                            handler.removeCallbacksAndMessages(null);
-                            playAnimalAnim(RUNNING);
-                        }else if(message.equalsIgnoreCase("still")){
-                            playAnimalAnim(SCRATCHING);
-
-                            handler.postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Random random = new Random();
-                                    playAnimalAnim(listAnimIds.get(random.nextInt(listAnimIds.size() - 1)));
-
-                                    handler.postDelayed(this, Config.IDLE_TIME * 1000);
-                                }
-                            }, Config.IDLE_TIME * 1000);
-                        }else{
-                            playAnimalAnim(R.drawable.roll_over);
-                        }
-                    }
-                });
+                runAnimationCorrespondingActivityRecognized(activityName);
 
             }
+
+
+            canvas.setImageBitmap(loadBitmapFromAsset(item.getDataMap().getAsset("img")));
         }
+    }
+
+    private void runAnimationCorrespondingActivityRecognized(final String activityRecognized){
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+
+                Toast.makeText(MainActivity.this, "activity: " + activityRecognized, Toast.LENGTH_SHORT).show();
+
+                if(activityRecognized.equalsIgnoreCase("walking")) {
+                    handler.removeCallbacksAndMessages(null);
+                    playAnimalAnim(R.drawable.walking);
+                }else if(activityRecognized.equalsIgnoreCase("running")){
+                    handler.removeCallbacksAndMessages(null);
+                    playAnimalAnim(R.drawable.running);
+                }else if(activityRecognized.equalsIgnoreCase("still")){
+                    playAnimalAnim(R.drawable.scratch_the_ear);
+
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            Random random = new Random();
+                            playAnimalAnim(listAnimIds.get(random.nextInt(listAnimIds.size() - 1)));
+
+                            handler.postDelayed(this, Config.REFRESH_ANIM * 1000);
+                        }
+                    }, Config.REFRESH_ANIM * 1000);
+                }else{
+                    playAnimalAnim(R.drawable.roll_over);
+                }
+            }
+        });
     }
 
     public Bitmap loadBitmapFromAsset(Asset asset){
@@ -566,24 +638,5 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
         }
 
         return BitmapFactory.decodeStream(iStream);
-    }
-
-    public static class ErrorDialogFragment extends DialogFragment {
-        private Dialog mDialog;
-
-        public ErrorDialogFragment(){
-            super();
-            mDialog = null;
-        }
-
-        public void setDialog(Dialog dialog){
-            mDialog = dialog;
-        }
-
-        @NonNull
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            return mDialog;
-        }
     }
 }

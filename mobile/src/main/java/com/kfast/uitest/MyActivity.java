@@ -3,12 +3,15 @@ package com.kfast.uitest;
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.ActionBarActivity;
@@ -16,8 +19,12 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -30,6 +37,8 @@ import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.ActivityRecognitionApi;
 import com.google.android.gms.wearable.Asset;
 import com.google.android.gms.wearable.DataApi;
+import com.google.android.gms.wearable.MessageApi;
+import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
@@ -37,15 +46,18 @@ import com.google.android.gms.wearable.Wearable;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 //import com.google.android.gms.location.ActivityRecognitionClient;
 
 
-public class MyActivity extends ActionBarActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener{
+public class MyActivity extends ActionBarActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, MessageApi.MessageListener {
+
+    private static final String MESSAGE_PATH = "/start/activity-recognition";
 
     private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
     // Constants that define the activity detection interval
     public static final int MILLISECONDS_PER_SECOND = 1000;
-    public static final int DETECTION_INTERVAL_SECONDS = 1;
+    public static final int DETECTION_INTERVAL_SECONDS = 3;
     public static final int DETECTION_INTERVAL_MILLISECONDS =
             MILLISECONDS_PER_SECOND * DETECTION_INTERVAL_SECONDS;
 
@@ -62,20 +74,34 @@ public class MyActivity extends ActionBarActivity implements GoogleApiClient.Con
     private enum REQUEST_TYPE {START, STOP}
     private REQUEST_TYPE mRequestType;
 
-    private Button btnStop;
-    private Button btnSend;
+//    private Button btnStop;
+//    private Button btnSend;
 
     private ImageView ivTestImage;
+
+    private ListView listView;
+
+    private MyActivityAdapter adapter;
+
+    private ArrayList<String> listActivity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my);
 
-        btnStop = (Button) findViewById(R.id.btnStop);
-        btnSend = (Button) findViewById(R.id.btnSend);
+//        btnStop = (Button) findViewById(R.id.btnStop);
+//        btnSend = (Button) findViewById(R.id.btnSend);
 
         ivTestImage = (ImageView) findViewById(R.id.ivTestImage);
+
+        listView = (ListView) findViewById(R.id.listView);
+
+        listActivity = new ArrayList<String>();
+
+        adapter = new MyActivityAdapter(this, listActivity);
+
+        listView.setAdapter(adapter);
 
         ivTestImage.setImageBitmap(getBitmapFromAssets());
 
@@ -104,6 +130,12 @@ public class MyActivity extends ActionBarActivity implements GoogleApiClient.Con
 
         wearClient.connect();
 
+        Wearable.MessageApi.addListener(wearClient, this);
+
+        initRecognitionClient();
+    }
+
+    private void initRecognitionClient(){
         recognitionClient = new GoogleApiClient.Builder(this)
                 .addApi(ActivityRecognition.API)
                 .addConnectionCallbacks(this)
@@ -111,23 +143,44 @@ public class MyActivity extends ActionBarActivity implements GoogleApiClient.Con
                 .build();
 
         Intent intent = new Intent(this, ActivityRecognitionIntentService.class);
-        mActivityRecognitionPendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        mActivityRecognitionPendingIntent = PendingIntent.getService(this, 1000, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        recognitionApi = ActivityRecognition.ActivityRecognitionApi;
+    }
+
+    private void activityRecognitionSetup(){
+        Intent intent = new Intent(this, ActivityRecognitionIntentService.class);
+//        ActivityRecognitionReceiver resultReceiver = new ActivityRecognitionReceiver(new Handler());
+//        resultReceiver.setReceiver(new ActivityRecognitionReceiver.Receiver() {
+//            @Override
+//            public void onReceivedResult(int resultCode, Bundle resultData) {
+//                Log.d("activityDetected", "activityDetected: " + resultData.getString("activityDetected"));
+//
+//                if(resultCode == RESULT_OK){
+//                    listActivity.add(resultData.getString("activityDetected"));
+//                    adapter.notifyDataSetChanged();
+//                }
+//            }
+//        });
+//
+//        intent.putExtra("receiver", resultReceiver);
+        mActivityRecognitionPendingIntent = PendingIntent.getService(this, 1000, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         recognitionApi = ActivityRecognition.ActivityRecognitionApi;
 
-        btnStop.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                stopUpdates();
-            }
-        });
-
-        btnSend.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startSendDataToWear();
-            }
-        });
+//        btnStop.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                stopUpdates();
+//            }
+//        });
+//
+//        btnSend.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                startSendDataToWear();
+//            }
+//        });
 
         startUpdates();
     }
@@ -183,8 +236,15 @@ public class MyActivity extends ActionBarActivity implements GoogleApiClient.Con
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
+        switch (id){
+            case R.id.action_settings:
+                break;
+            case R.id.action_stop_activity_recognition:
+                stopUpdates();
+                break;
+            case R.id.action_send_image_to_wear:
+                startSendDataToWear();
+                break;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -253,6 +313,8 @@ public class MyActivity extends ActionBarActivity implements GoogleApiClient.Con
         }else{
 
         }
+
+        Toast.makeText(this, "Activity Recognition Stopped", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -260,10 +322,10 @@ public class MyActivity extends ActionBarActivity implements GoogleApiClient.Con
 
         switch (mRequestType){
             case START:
-//                recognitionApi.requestActivityUpdates(recognitionClient, DETECTION_INTERVAL_MILLISECONDS, mActivityRecognitionPendingIntent);
+                recognitionApi.requestActivityUpdates(recognitionClient, DETECTION_INTERVAL_MILLISECONDS, mActivityRecognitionPendingIntent);
                 break;
             case STOP:
-//                recognitionApi.removeActivityUpdates(recognitionClient, mActivityRecognitionPendingIntent);
+                recognitionApi.removeActivityUpdates(recognitionClient, mActivityRecognitionPendingIntent);
                 break;
         }
 
@@ -298,6 +360,15 @@ public class MyActivity extends ActionBarActivity implements GoogleApiClient.Con
         }
     }
 
+    @Override
+    public void onMessageReceived(MessageEvent messageEvent) {
+        Log.d("message_received", "message path: " + messageEvent.getPath());
+
+        if(messageEvent.getPath().equals(MESSAGE_PATH)){
+            activityRecognitionSetup();
+        }
+    }
+
     public static class ErrorDialogFragment extends DialogFragment{
         private Dialog mDialog;
 
@@ -315,5 +386,51 @@ public class MyActivity extends ActionBarActivity implements GoogleApiClient.Con
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             return mDialog;
         }
+    }
+
+    private class MyActivityAdapter extends BaseAdapter{
+
+        ArrayList<String> list;
+        Context context;
+
+        public MyActivityAdapter(Context context, ArrayList<String> list){
+            this.context = context;
+            this.list = list;
+        }
+
+        @Override
+        public int getCount() {
+            return list.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return list.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+//            ViewHolder holder;
+
+            if(convertView == null){
+                convertView = new TextView(context);
+//                holder = new ViewHolder();
+//                holder.tvActivity = (TextView) convertView;
+                convertView.setPadding(20, 20, 20, 20);
+            }
+
+            ((TextView)convertView).setText("Detected Activity: " + list.get(position));
+
+            return convertView;
+        }
+    }
+
+    static class ViewHolder{
+        TextView tvActivity;
     }
 }

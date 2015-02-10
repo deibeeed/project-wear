@@ -1,9 +1,11 @@
 package com.kfast.uitest;
 
+import android.app.Activity;
 import android.app.IntentService;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.ResultReceiver;
 import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -21,6 +23,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 
 
 /**
@@ -34,6 +37,11 @@ public class ActivityRecognitionIntentService extends IntentService {
     private GoogleApiClient client;
     private PendingResult<DataApi.DataItemResult> pendingResult;
 
+    private ActivityRecognitionResult recognitionResult;
+    private DetectedActivity mostProbableActivity;
+
+    private static final String TAG = "ActRecognitionService";
+
     public ActivityRecognitionIntentService() {
         super("ActivityRecognitionIntentService");
     }
@@ -46,45 +54,45 @@ public class ActivityRecognitionIntentService extends IntentService {
                     .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
                         @Override
                         public void onConnected(Bundle bundle) {
-                            Log.d("intent_service:onConnected", "connected");
+                            Log.d(TAG, "connected");
                         }
 
                         @Override
                         public void onConnectionSuspended(int i) {
-                            Log.d("intent_service:onConnectionSuspended", "connection suspended");
+                            Log.d(TAG, "connection suspended");
                         }
                     })
                     .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
                         @Override
                         public void onConnectionFailed(ConnectionResult connectionResult) {
-                            Log.d("intent_service:onConnectionFailed", "connection failed");
+                            Log.d(TAG, "connection failed");
                         }
                     })
                     .build();
 
             client.connect();
 
-            ActivityRecognitionResult recognitionResult = ActivityRecognitionResult.extractResult(intent);
-            DetectedActivity mostProbableActivity = recognitionResult.getMostProbableActivity();
+            recognitionResult = ActivityRecognitionResult.extractResult(intent);
+            mostProbableActivity = recognitionResult.getMostProbableActivity();
 
             int confidence = mostProbableActivity.getConfidence();
             int activityType = mostProbableActivity.getType();
             String activityName = getNameFromType(activityType);
 
-            File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "project-watch-logs.txt");
-            try {
-                FileWriter writer = new FileWriter(file);
-                String txt = new Date().toString() + ": Activity Name: " + activityName + "\n";
-                writer.append(txt);
-                writer.flush();
-                writer.close();
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+//            File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "project-watch-logs.txt");
+//            try {
+//                FileWriter writer = new FileWriter(file);
+//                String txt = new Date().toString() + ": Activity Name: " + activityName + "\n";
+//                writer.append(txt);
+//                writer.flush();
+//                writer.close();
+//
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
             Log.d("activity detect service", activityName);
 
-            sendDataToWear(activityName, activityType);
+            sendDataToWear(activityName, activityType, intent);
 
             if(client.isConnected()){
                 client.disconnect();
@@ -99,7 +107,15 @@ public class ActivityRecognitionIntentService extends IntentService {
             case DetectedActivity.ON_BICYCLE:
                 return "on_bicycle";
             case DetectedActivity.ON_FOOT:
-                return "on_foot";
+
+                String result = walkingOrRunningStr(recognitionResult.getProbableActivities());
+
+                if(result != null){
+                    return result;
+                }else{
+                    return "on_foot";
+                }
+
             case DetectedActivity.RUNNING:
                 return "running";
             case DetectedActivity.WALKING:
@@ -115,18 +131,69 @@ public class ActivityRecognitionIntentService extends IntentService {
     }
 
 
-    private void sendDataToWear(String dataToSend, int activityType){
-        PutDataMapRequest dataMap = PutDataMapRequest.create("/test-service");
-        dataMap.getDataMap().putString("message_service", dataToSend);
+    private void sendDataToWear(String dataToSend, int activityType, Intent intent){
+        PutDataMapRequest dataMap = PutDataMapRequest.create("/activity-recognized");
+        dataMap.getDataMap().putString("activityName", dataToSend);
         dataMap.getDataMap().putInt("activityType", activityType);
+        dataMap.getDataMap().putLong("timestamp", System.currentTimeMillis());
         PutDataRequest request = dataMap.asPutDataRequest();
         pendingResult = Wearable.DataApi.putDataItem(client, request);
 
         pendingResult.setResultCallback(new ResultCallback<DataApi.DataItemResult>() {
             @Override
             public void onResult(DataApi.DataItemResult dataItemResult) {
-                Log.d("recognition_service result callback", "status: " + dataItemResult.getStatus().getStatus() + "result: " + dataItemResult.getDataItem().getUri());
+                Log.d(TAG, "status: " + dataItemResult.getStatus().getStatus() + "result: " + dataItemResult.getDataItem().getUri());
             }
         });
+
+//        try {
+//            ResultReceiver receiver = intent.getParcelableExtra("receiver");
+//            Bundle bun = new Bundle();
+//            bun.putString("activityDetected", dataToSend);
+//            Log.d("receiver", receiver != null ? "OK RECEIVED" : "ERROR RECEIVED");
+//            receiver.send(Activity.RESULT_OK, bun);
+//        }catch (Exception e){
+//            e.printStackTrace();
+//        }
+    }
+
+    private DetectedActivity walkingOrRunning(List<DetectedActivity> probableActivities) {
+        DetectedActivity myActivity = null;
+        int confidence = 0;
+        for (DetectedActivity activity : probableActivities) {
+            if (activity.getType() != DetectedActivity.RUNNING && activity.getType() != DetectedActivity.WALKING)
+                continue;
+
+            if (activity.getConfidence() > confidence)
+                myActivity = activity;
+        }
+
+        return myActivity;
+    }
+
+    private String walkingOrRunningStr(List<DetectedActivity> probableActivities) {
+        DetectedActivity myActivity = null;
+        String result = null;
+        int confidence = 0;
+        for (DetectedActivity activity : probableActivities) {
+            if (activity.getType() != DetectedActivity.RUNNING && activity.getType() != DetectedActivity.WALKING)
+                continue;
+
+            if (activity.getConfidence() > confidence)
+                myActivity = activity;
+        }
+
+        if(myActivity != null){
+            switch (myActivity.getType()){
+                case DetectedActivity.WALKING:
+                    result = "walking";
+                    break;
+                case DetectedActivity.RUNNING:
+                    result = "running";
+                    break;
+            }
+        }
+
+        return result;
     }
 }

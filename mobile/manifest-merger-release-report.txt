@@ -67,7 +67,7 @@ category#android.intent.category.LAUNCHER
 ADDED from AndroidManifest.xml:26:17
 	android:name
 		ADDED from AndroidManifest.xml:26:27
-service#com.kfast.uitest.ActivityRecognitionIntentService
+service#com.kfast.uitest.service.ActivityRecognitionIntentService
 ADDED from AndroidManifest.xml:30:9
 	android:exported
 		ADDED from AndroidManifest.xml:32:13
