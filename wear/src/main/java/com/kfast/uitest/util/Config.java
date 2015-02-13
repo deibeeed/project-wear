@@ -8,4 +8,5 @@ public class Config {
     public static int NUM_STEPS_TO_TRIGGER_MORAL_LOSS = 30;
     public static int PROGRESS_BAR_STEPS = 200;
     public static int REFRESH_ANIM = 5;
+    public static boolean HAS_EXIT_APP = false;
 }

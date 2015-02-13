@@ -1,6 +1,7 @@
 package com.kfast.uitest;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.Dialog;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -28,6 +29,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -47,7 +49,9 @@ import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 import com.kfast.uitest.receiver.ActivityRecognitionReceiver;
 import com.kfast.uitest.service.ActivityRecognitionIntentService;
+import com.kfast.uitest.service.StepService;
 import com.kfast.uitest.util.Config;
+import com.kfast.uitest.util.PreferenceHelper;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -108,6 +112,14 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
     private boolean mInProgress;
 
     private ImageView ivSettings;
+
+    private boolean isSwipeUpUnlocked;
+    private boolean isSwipeDownUnlocked;
+    private boolean isSwipeLeftUnlocked;
+    private boolean isSwipeRightUnlocked;
+
+    private TextView tvProgressCount;
+    private TextView tvProgressTotal;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -304,6 +316,8 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
 		canvas = (ImageView) findViewById(R.id.canvas);
 		progressBar = (ProgressBar) findViewById(R.id.progress);
         ivSettings = (ImageView) findViewById(R.id.ivSettings);
+        tvProgressCount = (TextView) findViewById(R.id.tvProgressCount);
+        tvProgressTotal = (TextView) findViewById(R.id.tvProgressTotal);
 //		initSlideLayouts();
 
         listAnimIds.add(R.drawable.scratch_the_ear);
@@ -311,6 +325,8 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
         listAnimIds.add(R.drawable.hold_still_b);
         listAnimIds.add(R.drawable.scratching);
         listAnimIds.add(R.drawable.smile);
+
+        tvProgressTotal.setText(Config.PROGRESS_BAR_STEPS + "");
 
         canvas.setOnTouchListener(new View.OnTouchListener(){
 
@@ -422,10 +438,16 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
 
 		if (sensor.getType() == Sensor.TYPE_STEP_DETECTOR) {
 //			playAnimalAnim(WALKING);
-            progressBar.incrementProgressBy(1);
+            if(progressBar.getProgress() <= Config.PROGRESS_BAR_STEPS){
+                progressBar.incrementProgressBy(1);
+                tvProgressCount.setText(progressBar.getProgress() + "");
 
-            if(petHappiness > 0)
-                petHappiness--;
+                PreferenceHelper.getInstance(this).setInt("stepCount", progressBar.getProgress());
+            }
+//            if(petHappiness > 0)
+//                petHappiness--;
+
+            checkAccomplishments();
 		}
 	}
 
@@ -441,71 +463,55 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
 
 		switch (direction) {
 		case SimpleGestureFilter.SWIPE_LEFT:
-            if(petHappiness >= (Config.PROGRESS_BAR_STEPS * .25)) {
-                Toast.makeText(this, "Hoooray! Swipe Left trick unlocked!", Toast.LENGTH_SHORT).show();
+            if(isSwipeLeftUnlocked) {
                 playAnimalAnim(R.drawable.fetch);
-
-                if(petHappiness < Config.NUM_STEPS_TO_TRIGGER_MORAL_LOSS)
-                    petHappiness++;
             }
             else
                 Toast.makeText(this, "You have not unlock this trick!", Toast.LENGTH_SHORT).show();
 //            Toast.makeText(this, "IDLE TIME = " + Config.IDLE_TIME, Toast.LENGTH_SHORT).show();
 			break;
 		case SimpleGestureFilter.SWIPE_UP:
-            if(petHappiness >= (Config.PROGRESS_BAR_STEPS * .75)) {
-                Toast.makeText(this, "Hoooray! Swipe Up trick unlocked!", Toast.LENGTH_SHORT).show();
+            if(isSwipeUpUnlocked) {
                 playAnimalAnim(R.drawable.roll_over);
-
-                if(petHappiness < Config.NUM_STEPS_TO_TRIGGER_MORAL_LOSS)
-                    petHappiness++;
             }
             else
                 Toast.makeText(this, "You have not unlock this trick!", Toast.LENGTH_SHORT).show();
 //            Toast.makeText(this, "NUM STEPS TO TRIGGER MORAL LOSS = " + Config.NUM_STEPS_TO_TRIGGER_MORAL_LOSS, Toast.LENGTH_SHORT).show();
 			break;
 		case SimpleGestureFilter.SWIPE_RIGHT:
-            if(petHappiness >= (Config.PROGRESS_BAR_STEPS * .50)) {
-                Toast.makeText(this, "Hoooray! Swipe Right trick unlocked!", Toast.LENGTH_SHORT).show();
+            if(isSwipeRightUnlocked) {
                 playAnimalAnim(R.drawable.play_dead);
-
-                if(petHappiness < Config.NUM_STEPS_TO_TRIGGER_MORAL_LOSS)
-                    petHappiness++;
             }
             else
                 Toast.makeText(this, "You have not unlock this trick!", Toast.LENGTH_SHORT).show();
 //            Toast.makeText(this, "PROGRESS BAR STEPS = " + Config.PROGRESS_BAR_STEPS, Toast.LENGTH_SHORT).show();
 			break;
 		case SimpleGestureFilter.SWIPE_DOWN:
-            if(petHappiness >= Config.PROGRESS_BAR_STEPS) {
-                Toast.makeText(this, "Hoooray! Swipe down trick unlocked!", Toast.LENGTH_SHORT).show();
+            if(isSwipeDownUnlocked) {
                 playAnimalAnim(R.drawable.scratch_the_ear);
-
-                if(petHappiness < Config.NUM_STEPS_TO_TRIGGER_MORAL_LOSS)
-                    petHappiness++;
             }
             else
                 Toast.makeText(this, "You have not unlock this trick!", Toast.LENGTH_SHORT).show();
 			break;
 		}
 
-        switch (petHappiness){
-            case 30:
-                Toast.makeText(this, "Pet's Happiness is at MAX!", Toast.LENGTH_SHORT).show();
-                break;
-            case 25:
-                Toast.makeText(this, "Almost there!", Toast.LENGTH_SHORT).show();
-                break;
-            case 20:
-                Toast.makeText(this, "Pet now is hyped!", Toast.LENGTH_SHORT).show();
-                break;
-            case 10:
-                Toast.makeText(this, "Play with your pet more!", Toast.LENGTH_SHORT).show();
-                break;
-            case 1:
-                Toast.makeText(this, "You've made your first pet Trick! Keep it up!", Toast.LENGTH_SHORT).show();
-                break;
-        }
+//        switch (petHappiness){
+//            case 30:
+//                Toast.makeText(this, "Pet's Happiness is at MAX!", Toast.LENGTH_SHORT).show();
+//                break;
+//            case 25:
+//                Toast.makeText(this, "Almost there!", Toast.LENGTH_SHORT).show();
+//                break;
+//            case 20:
+//                Toast.makeText(this, "Pet now is hyped!", Toast.LENGTH_SHORT).show();
+//                break;
+//            case 10:
+//                Toast.makeText(this, "Play with your pet more!", Toast.LENGTH_SHORT).show();
+//                break;
+//            case 1:
+//                Toast.makeText(this, "You've made your first pet Trick! Keep it up!", Toast.LENGTH_SHORT).show();
+//                break;
+//        }
 	}
 
 	private void hideSlideLayouts() {
@@ -532,6 +538,9 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
 
 //        if(canvas.hasFocus())
 		    dismissOverlay.show();
+        Config.HAS_EXIT_APP = true;
+        PreferenceHelper.getInstance(this).setInt("stepCount", 0);
+        stopService(new Intent(this, StepService.class));
 	}
 
     @Override
@@ -540,9 +549,25 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
 
         if(!wearClient.isConnected())
             wearClient.connect();
+
+        if(isServiceRunning(StepService.class)){
+            stopService(new Intent(this, StepService.class));
+        }
+
+        tvProgressCount.setText(PreferenceHelper.getInstance(this).getInt("stepCount", 0) + "");
+        progressBar.setProgress(PreferenceHelper.getInstance(this).getInt("stepCount", 0));
+        Config.HAS_EXIT_APP = false;
+        checkAccomplishments();
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
 
+        if(!isServiceRunning(StepService.class) && !Config.HAS_EXIT_APP){
+            startService(new Intent(this, StepService.class));
+        }
+    }
 
     @Override
     public void onConnected(Bundle bundle) {
@@ -600,7 +625,7 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
                     handler.removeCallbacksAndMessages(null);
                     playAnimalAnim(R.drawable.running);
                 }else if(activityRecognized.equalsIgnoreCase("still")){
-                    playAnimalAnim(R.drawable.scratch_the_ear);
+//                    playAnimalAnim(R.drawable.scratch_the_ear);
 
                     handler.postDelayed(new Runnable() {
                         @Override
@@ -638,5 +663,38 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
         }
 
         return BitmapFactory.decodeStream(iStream);
+    }
+
+    private boolean isServiceRunning(Class service){
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for(ActivityManager.RunningServiceInfo serviceInfo : manager.getRunningServices(Integer.MAX_VALUE)){
+            if(serviceInfo.service.getClassName().equalsIgnoreCase(service.getName())){
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public void checkAccomplishments(){
+        if(progressBar.getProgress() >= (Config.PROGRESS_BAR_STEPS * .25) && !isSwipeLeftUnlocked) {
+            isSwipeLeftUnlocked = true;
+            Toast.makeText(this, "Hoooray! Swipe Left trick unlocked!", Toast.LENGTH_SHORT).show();
+        }
+
+        if(petHappiness >= (Config.PROGRESS_BAR_STEPS * .75) && !isSwipeUpUnlocked) {
+            isSwipeUpUnlocked = true;
+            Toast.makeText(this, "Hoooray! Swipe Up trick unlocked!", Toast.LENGTH_SHORT).show();
+        }
+
+        if(petHappiness >= (Config.PROGRESS_BAR_STEPS * .50) && !isSwipeRightUnlocked) {
+            isSwipeRightUnlocked =  true;
+            Toast.makeText(this, "Hoooray! Swipe Right trick unlocked!", Toast.LENGTH_SHORT).show();
+        }
+
+        if(petHappiness >= Config.PROGRESS_BAR_STEPS && !isSwipeDownUnlocked) {
+            isSwipeDownUnlocked = true;
+            Toast.makeText(this, "Hoooray! Swipe down trick unlocked!", Toast.LENGTH_SHORT).show();
+        }
     }
 }

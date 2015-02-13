@@ -86,7 +86,7 @@ public class ConfigActivity extends Activity {
         list.add("Set steps before moral loss");
         list.add("Set Progress steps");
         list.add("Restore to Default");
-//        list.add("sample 5");
+//        list.add("Exit App");
 
         return list;
     }

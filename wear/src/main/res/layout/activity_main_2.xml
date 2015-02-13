@@ -34,7 +34,7 @@
                 android:id="@+id/canvas"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"/>
+                android:layout_gravity="center" />
 
         </FrameLayout>
 
@@ -54,6 +54,24 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|center_horizontal" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="0"
+            android:id="@+id/tvProgressCount"
+            android:layout_gravity="left|bottom"
+            android:layout_marginBottom="10dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="200"
+            android:id="@+id/tvProgressTotal"
+            android:layout_gravity="right|bottom"
+            android:layout_marginBottom="10dp" />
 
     </FrameLayout>
 
