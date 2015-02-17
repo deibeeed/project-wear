@@ -600,8 +600,8 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
 //                switch (activityType){
 //                    case DetectedActivity
 //                }
-
-                runAnimationCorrespondingActivityRecognized(activityName);
+                //TODO: uncomment later after testing
+//                runAnimationCorrespondingActivityRecognized(activityName);
 
             }
 

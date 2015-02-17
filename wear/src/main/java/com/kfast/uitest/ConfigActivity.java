@@ -39,11 +39,23 @@ public class ConfigActivity extends Activity {
 
                 selectedItemPosition = tag;
 
-                if(tag == 3){
-                    startActivity(new Intent(viewHolder.itemView.getContext(), CustomConfirmationActivty.class).putExtra("msg", "Are you sure?"));
-                }else{
-                    startActivityForResult(new Intent(viewHolder.itemView.getContext(), ChoiceActivity.class).putExtra("from", selectedItemPosition), selectedItemPosition);
+                switch (tag){
+                    case 4:
+                        startActivity(new Intent(viewHolder.itemView.getContext(), CustomConfirmationActivty.class).putExtra("action", Config.Action.ACTION_RESTORE_DEFAULT_CONFIG).putExtra("msg", "Are you sure?"));
+                        break;
+                    case 3:
+                        startActivity(new Intent(viewHolder.itemView.getContext(), CustomConfirmationActivty.class).putExtra("action", Config.Action.ACTION_RESET_STEP_COUNT).putExtra("msg", "Reset Step Count?"));
+                        break;
+                    default:
+                        startActivityForResult(new Intent(viewHolder.itemView.getContext(), ChoiceActivity.class).putExtra("from", selectedItemPosition), selectedItemPosition);
+                        break;
                 }
+
+//                if(tag == 4){
+//                    startActivity(new Intent(viewHolder.itemView.getContext(), CustomConfirmationActivty.class).putExtra("action", Config.Action.ACTION_RESTORE_DEFAULT_CONFIG).putExtra("msg", "Are you sure?"));
+//                }else{
+//                    startActivityForResult(new Intent(viewHolder.itemView.getContext(), ChoiceActivity.class).putExtra("from", selectedItemPosition), selectedItemPosition);
+//                }
             }
 
             @Override
@@ -85,8 +97,8 @@ public class ConfigActivity extends Activity {
         list.add("Set Idle Time");
         list.add("Set steps before moral loss");
         list.add("Set Progress steps");
+        list.add("Reset Step Count");
         list.add("Restore to Default");
-//        list.add("Exit App");
 
         return list;
     }
