@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory
+        android:title="@string/action_settings">
+
+        <ListPreference
+            android:key="idle_time"
+            android:entries="@array/list_idle_time"
+            android:entryValues="@array/list_idle_time"
+            android:defaultValue="15"
+            android:title="Set Idle Time"
+            android:summary="Setting Idle time"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null" />
+
+        <ListPreference
+            android:key="steps_to_moral_loss"
+            android:entries="@array/step_before_moral_loss"
+            android:entryValues="@array/step_before_moral_loss"
+            android:defaultValue="30"
+            android:title="Set steps before Moral Loss"
+            android:summary="Set steps before Moral Loss"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null" />
+
+        <ListPreference
+            android:key="progress_steps"
+            android:entries="@array/progress_steps"
+            android:entryValues="@array/progress_steps"
+            android:defaultValue="200"
+            android:title="Set Progress Steps"
+            android:summary="Set Progress Steps"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null" />
+
+        <com.kfast.uitest.ResetCountDialogPreference
+            android:key="reset_count"
+            android:title="Reset Step Count"
+            android:summary="Reset Step Count" />
+
+
+        <com.kfast.uitest.RestoreDefaultDialogPreference
+            android:key="restore_default"
+            android:title="Restore Default"
+            android:summary="Restore Default" />
+
+    </PreferenceCategory>
+</PreferenceScreen>

@@ -2,14 +2,20 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".MyActivity" >
-    <item android:id="@+id/action_settings"
-        android:title="@string/action_settings"
-        android:orderInCategory="100"
-        app:showAsAction="never" />
     <item android:id="@+id/action_stop_activity_recognition"
         android:title="@string/action_stop_activity_recognition"
-        app:showAsAction="never" />
+        app:showAsAction="ifRoom|withText" />
+    <item android:id="@+id/action_stop_fitness_recording"
+        android:title="@string/action_stop_fitness_recording"
+        app:showAsAction="ifRoom|withText" />
+    <item android:id="@+id/action_read_all_data"
+        android:title="@string/action_read_all_data" />
+    <item android:id="@+id/action_delete_all_data"
+        android:title="@string/action_delete_all_data" />
     <item android:id="@+id/action_send_image_to_wear"
         android:title="@string/action_send_image_to_wear"
-        app:showAsAction="never" />
+        app:showAsAction="ifRoom|withText" />
+    <item android:id="@+id/action_settings2"
+        android:title="@string/action_settings"
+        app:showAsAction="ifRoom|withText" />
 </menu>

@@ -56,8 +56,8 @@ public class MyActivity extends ActionBarActivity implements GoogleApiClient.Con
 
     private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
     // Constants that define the activity detection interval
-    public static final int MILLISECONDS_PER_SECOND = 1000;
-    public static final int DETECTION_INTERVAL_SECONDS = 3;
+    public static final int MILLISECONDS_PER_SECOND = 100;
+    public static final int DETECTION_INTERVAL_SECONDS = 1;
     public static final int DETECTION_INTERVAL_MILLISECONDS =
             MILLISECONDS_PER_SECOND * DETECTION_INTERVAL_SECONDS;
 
@@ -74,14 +74,7 @@ public class MyActivity extends ActionBarActivity implements GoogleApiClient.Con
     private enum REQUEST_TYPE {START, STOP}
     private REQUEST_TYPE mRequestType;
 
-//    private Button btnStop;
-//    private Button btnSend;
-
     private ImageView ivTestImage;
-
-    private ListView listView;
-
-    private MyActivityAdapter adapter;
 
     private ArrayList<String> listActivity;
 
@@ -90,18 +83,9 @@ public class MyActivity extends ActionBarActivity implements GoogleApiClient.Con
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my);
 
-//        btnStop = (Button) findViewById(R.id.btnStop);
-//        btnSend = (Button) findViewById(R.id.btnSend);
-
         ivTestImage = (ImageView) findViewById(R.id.ivTestImage);
 
-        listView = (ListView) findViewById(R.id.listView);
-
         listActivity = new ArrayList<String>();
-
-        adapter = new MyActivityAdapter(this, listActivity);
-
-        listView.setAdapter(adapter);
 
         ivTestImage.setImageBitmap(getBitmapFromAssets());
 
@@ -168,20 +152,6 @@ public class MyActivity extends ActionBarActivity implements GoogleApiClient.Con
 
         recognitionApi = ActivityRecognition.ActivityRecognitionApi;
 
-//        btnStop.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                stopUpdates();
-//            }
-//        });
-//
-//        btnSend.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                startSendDataToWear();
-//            }
-//        });
-
         startUpdates();
     }
 
@@ -238,6 +208,7 @@ public class MyActivity extends ActionBarActivity implements GoogleApiClient.Con
         int id = item.getItemId();
         switch (id){
             case R.id.action_settings:
+                startActivity(new Intent(this, SettingsActivity.class));
                 break;
             case R.id.action_stop_activity_recognition:
                 stopUpdates();
@@ -386,51 +357,5 @@ public class MyActivity extends ActionBarActivity implements GoogleApiClient.Con
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             return mDialog;
         }
-    }
-
-    private class MyActivityAdapter extends BaseAdapter{
-
-        ArrayList<String> list;
-        Context context;
-
-        public MyActivityAdapter(Context context, ArrayList<String> list){
-            this.context = context;
-            this.list = list;
-        }
-
-        @Override
-        public int getCount() {
-            return list.size();
-        }
-
-        @Override
-        public Object getItem(int position) {
-            return list.get(position);
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-//            ViewHolder holder;
-
-            if(convertView == null){
-                convertView = new TextView(context);
-//                holder = new ViewHolder();
-//                holder.tvActivity = (TextView) convertView;
-                convertView.setPadding(20, 20, 20, 20);
-            }
-
-            ((TextView)convertView).setText("Detected Activity: " + list.get(position));
-
-            return convertView;
-        }
-    }
-
-    static class ViewHolder{
-        TextView tvActivity;
     }
 }

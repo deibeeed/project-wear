@@ -18,6 +18,8 @@ public class StepService extends Service implements SensorEventListener{
     private SensorManager sensorManager;
     private Sensor stepSensor;
 
+    private int progressBarMax;
+
     public StepService() {
     }
 
@@ -25,6 +27,8 @@ public class StepService extends Service implements SensorEventListener{
     public int onStartCommand(Intent intent, int flags, int startId) {
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
+
+        progressBarMax = PreferenceHelper.getInstance(this).getInt(Config.Keys.KEY_PROGRESS_STEPS, Config.PROGRESS_BAR_STEPS);
 
         sensorManager.registerListener(this, stepSensor, SensorManager.SENSOR_DELAY_FASTEST);
         Log.d("step_service", "service started");
@@ -43,7 +47,7 @@ public class StepService extends Service implements SensorEventListener{
             int stepCount = PreferenceHelper.getInstance(this).getInt("stepCount", 0);
             stepCount++;
 
-            if(stepCount <= Config.PROGRESS_BAR_STEPS){
+            if(stepCount <= progressBarMax){
                 PreferenceHelper.getInstance(this).setInt("stepCount", stepCount);
             }
 

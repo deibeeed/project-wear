@@ -4,182 +4,95 @@
 
     <item
         android:drawable="@drawable/walking0001"
-        android:duration="40"/>
+        android:duration="65"/>
     <item
         android:drawable="@drawable/walking0002"
-        android:duration="40"/>
+        android:duration="65"/>
     <item
         android:drawable="@drawable/walking0003"
-        android:duration="40"/>
+        android:duration="65"/>
     <item
         android:drawable="@drawable/walking0004"
-        android:duration="40"/>
+        android:duration="65"/>
     <item
         android:drawable="@drawable/walking0005"
-        android:duration="40"/>
+        android:duration="65"/>
     <item
         android:drawable="@drawable/walking0006"
-        android:duration="40"/>
+        android:duration="65"/>
     <item
         android:drawable="@drawable/walking0007"
-        android:duration="40"/>
+        android:duration="65"/>
     <item
         android:drawable="@drawable/walking0008"
-        android:duration="40"/>
+        android:duration="65"/>
     <item
         android:drawable="@drawable/walking0009"
-        android:duration="40"/>
+        android:duration="65"/>
     <item
         android:drawable="@drawable/walking0010"
-        android:duration="40"/>
+        android:duration="65"/>
     <item
         android:drawable="@drawable/walking0011"
-        android:duration="40"/>
+        android:duration="65"/>
     <item
         android:drawable="@drawable/walking0012"
-        android:duration="40"/>
+        android:duration="65"/>
     <item
         android:drawable="@drawable/walking0013"
-        android:duration="40"/>
+        android:duration="65"/>
     <item
         android:drawable="@drawable/walking0014"
-        android:duration="40"/>
+        android:duration="65"/>
     <item
         android:drawable="@drawable/walking0015"
-        android:duration="40"/>
+        android:duration="65"/>
     <item
         android:drawable="@drawable/walking0016"
-        android:duration="40"/>
+        android:duration="65"/>
     <item
         android:drawable="@drawable/walking0017"
-        android:duration="40"/>
+        android:duration="65"/>
     <item
         android:drawable="@drawable/walking0018"
-        android:duration="40"/>
+        android:duration="65"/>
     <item
         android:drawable="@drawable/walking0019"
-        android:duration="40"/>
+        android:duration="65"/>
     <item
         android:drawable="@drawable/walking0020"
-        android:duration="40"/>
+        android:duration="65"/>
     <item
         android:drawable="@drawable/walking0021"
-        android:duration="40"/>
+        android:duration="65"/>
     <item
         android:drawable="@drawable/walking0022"
-        android:duration="40"/>
+        android:duration="65"/>
     <item
         android:drawable="@drawable/walking0023"
-        android:duration="40"/>
+        android:duration="65"/>
     <item
         android:drawable="@drawable/walking0024"
-        android:duration="40"/>
+        android:duration="65"/>
     <item
         android:drawable="@drawable/walking0025"
-        android:duration="40"/>
+        android:duration="65"/>
     <item
         android:drawable="@drawable/walking0026"
-        android:duration="40"/>
+        android:duration="65"/>
     <item
         android:drawable="@drawable/walking0027"
-        android:duration="40"/>
+        android:duration="65"/>
     <item
         android:drawable="@drawable/walking0028"
-        android:duration="40"/>
+        android:duration="65"/>
     <item
         android:drawable="@drawable/walking0029"
-        android:duration="40"/>
+        android:duration="65"/>
     <item
         android:drawable="@drawable/walking0030"
-        android:duration="40"/>
+        android:duration="65"/>
     <item
         android:drawable="@drawable/walking0031"
-        android:duration="40"/>
-    <item
-        android:drawable="@drawable/walking0032"
-        android:duration="40"/>
-    <item
-        android:drawable="@drawable/walking0033"
-        android:duration="40"/>
-    <item
-        android:drawable="@drawable/walking0034"
-        android:duration="40"/>
-    <item
-        android:drawable="@drawable/walking0035"
-        android:duration="40"/>
-    <item
-        android:drawable="@drawable/walking0036"
-        android:duration="40"/>
-    <item
-        android:drawable="@drawable/walking0037"
-        android:duration="40"/>
-    <item
-        android:drawable="@drawable/walking0038"
-        android:duration="40"/>
-    <item
-        android:drawable="@drawable/walking0039"
-        android:duration="40"/>
-    <item
-        android:drawable="@drawable/walking0040"
-        android:duration="40"/>
-    <item
-        android:drawable="@drawable/walking0041"
-        android:duration="40"/>
-    <item
-        android:drawable="@drawable/walking0042"
-        android:duration="40"/>
-    <item
-        android:drawable="@drawable/walking0043"
-        android:duration="40"/>
-    <item
-        android:drawable="@drawable/walking0044"
-        android:duration="40"/>
-    <item
-        android:drawable="@drawable/walking0045"
-        android:duration="40"/>
-    <item
-        android:drawable="@drawable/walking0046"
-        android:duration="40"/>
-    <item
-        android:drawable="@drawable/walking0047"
-        android:duration="40"/>
-    <item
-        android:drawable="@drawable/walking0048"
-        android:duration="40"/>
-    <item
-        android:drawable="@drawable/walking0049"
-        android:duration="40"/>
-    <item
-        android:drawable="@drawable/walking0050"
-        android:duration="40"/>
-    <item
-        android:drawable="@drawable/walking0051"
-        android:duration="40"/>
-    <item
-        android:drawable="@drawable/walking0052"
-        android:duration="40"/>
-    <item
-        android:drawable="@drawable/walking0053"
-        android:duration="40"/>
-    <item
-        android:drawable="@drawable/walking0054"
-        android:duration="40"/>
-    <item
-        android:drawable="@drawable/walking0055"
-        android:duration="40"/>
-    <item
-        android:drawable="@drawable/walking0056"
-        android:duration="40"/>
-    <item
-        android:drawable="@drawable/walking0057"
-        android:duration="40"/>
-    <item
-        android:drawable="@drawable/walking0058"
-        android:duration="40"/>
-    <item
-        android:drawable="@drawable/walking0059"
-        android:duration="40"/>
-    <item
-        android:drawable="@drawable/walking0060"
-        android:duration="40"/>
+        android:duration="65"/>
 </animation-list>

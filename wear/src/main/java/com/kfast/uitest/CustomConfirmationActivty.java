@@ -40,6 +40,10 @@ public class CustomConfirmationActivty extends Activity {
                     Config.NUM_STEPS_TO_TRIGGER_MORAL_LOSS = 30;
                     Config.PROGRESS_BAR_STEPS = 200;
 
+                    PreferenceHelper.getInstance(v.getContext()).setInt(Config.Keys.KEY_IDLE_TIME, 15);
+                    PreferenceHelper.getInstance(v.getContext()).setInt(Config.Keys.KEY_PROGRESS_STEPS, 200);
+                    PreferenceHelper.getInstance(v.getContext()).setInt(Config.Keys.KEY_STEP_MORAL_LOSS, 30);
+
                     Toast.makeText(v.getContext(), "Restore defaults successful", Toast.LENGTH_SHORT).show();
                 }else{
                     PreferenceHelper.getInstance(v.getContext()).setInt("stepCount", 0);

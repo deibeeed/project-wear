@@ -2,6 +2,7 @@ package com.kfast.uitest;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.wearable.view.WatchViewStub;
 import android.support.wearable.view.WearableListView;
@@ -67,6 +68,9 @@ public class ChoiceActivity extends Activity {
                 list.add("400");
                 list.add("500");
                 break;
+            case 5:
+                list.add("has step counter: " + getPackageManager().hasSystemFeature(PackageManager.FEATURE_SENSOR_STEP_COUNTER));
+                list.add("has step detector: " + getPackageManager().hasSystemFeature(PackageManager.FEATURE_SENSOR_STEP_DETECTOR));
         }
 
         return list;

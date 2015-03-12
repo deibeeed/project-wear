@@ -1,10 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">UITest</string>
+    <string name="app_name">Fit Pet</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="action_stop_activity_recognition">Stop Activity Recognition</string>
     <string name="action_send_image_to_wear">Send Image to Wear</string>
+    <string name="action_stop_fitness_recording">Stop Fitness Recording</string>
+    <string name="action_delete_all_data">Delete all Fitness Data</string>
+    <string name="action_read_all_data">Read all Fitness Data</string>
+
+    <string-array name="list_idle_time">
+        <item>5</item>
+        <item>10</item>
+        <item>15</item>
+        <item>20</item>
+        <item>30</item>
+    </string-array>
+
+    <string-array name="step_before_moral_loss">
+        <item>10</item>
+        <item>20</item>
+        <item>30</item>
+        <item>40</item>
+        <item>50</item>
+    </string-array>
+
+    <string-array name="progress_steps">
+        <item>100</item>
+        <item>200</item>
+        <item>300</item>
+        <item>400</item>
+        <item>500</item>
+    </string-array>
+    <string name="title_activity_main">MainActivity</string>
+
+    <string name="nav_menu_title1">Home</string>
+    <string name="nav_menu_title2">Settings</string>
+    <string name="nav_menu_title3">Menu 3</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_example">Example action</string>
+
+<!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>

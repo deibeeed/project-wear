@@ -11,18 +11,18 @@
         app:layout_box="all"
         android:padding="10dp">
 
-        <DigitalClock
+        <TextClock
             android:id="@+id/clock"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="DigitalClock"
             android:layout_gravity="top|center_horizontal"/>
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_settings_white_36dp"
-            android:id="@+id/ivSettings"
-            android:layout_gravity="left"/>
+        <!--<ImageView-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:src="@drawable/ic_settings_white_36dp"-->
+            <!--android:id="@+id/ivSettings"-->
+            <!--android:layout_gravity="left"/>-->
 
         <FrameLayout
             android:layout_width="wrap_content"
@@ -34,6 +34,7 @@
                 android:id="@+id/canvas"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:background="@drawable/outer_stroke"
                 android:layout_gravity="center" />
 
         </FrameLayout>
@@ -44,7 +45,6 @@
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:max="200"
             android:layout_marginLeft="20dp"
             android:layout_marginRight="20dp"
             android:layout_gravity="bottom"/>

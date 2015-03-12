@@ -42,4 +42,13 @@ public class PreferenceHelper {
     public int getInt(String key, int defValue){
         return preferences.getInt(key, defValue);
     }
+
+    public void setBoolean(String key, boolean value){
+        editor.putBoolean(key, value);
+        editor.commit();
+    }
+
+    public boolean getBoolean(String key, boolean defValue){
+        return preferences.getBoolean(key, defValue);
+    }
 }

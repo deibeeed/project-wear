@@ -12,6 +12,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.kfast.uitest.util.Config;
+import com.kfast.uitest.util.PreferenceHelper;
 
 import java.util.ArrayList;
 
@@ -40,6 +41,9 @@ public class ConfigActivity extends Activity {
                 selectedItemPosition = tag;
 
                 switch (tag){
+                    case 5:
+                        startActivity(new Intent(viewHolder.itemView.getContext(), ChoiceActivity.class).putExtra("from", 5));
+                        break;
                     case 4:
                         startActivity(new Intent(viewHolder.itemView.getContext(), CustomConfirmationActivty.class).putExtra("action", Config.Action.ACTION_RESTORE_DEFAULT_CONFIG).putExtra("msg", "Are you sure?"));
                         break;
@@ -47,15 +51,10 @@ public class ConfigActivity extends Activity {
                         startActivity(new Intent(viewHolder.itemView.getContext(), CustomConfirmationActivty.class).putExtra("action", Config.Action.ACTION_RESET_STEP_COUNT).putExtra("msg", "Reset Step Count?"));
                         break;
                     default:
-                        startActivityForResult(new Intent(viewHolder.itemView.getContext(), ChoiceActivity.class).putExtra("from", selectedItemPosition), selectedItemPosition);
+//                        startActivityForResult(new Intent(viewHolder.itemView.getContext(), ChoiceActivity.class).putExtra("from", selectedItemPosition), selectedItemPosition);
                         break;
                 }
 
-//                if(tag == 4){
-//                    startActivity(new Intent(viewHolder.itemView.getContext(), CustomConfirmationActivty.class).putExtra("action", Config.Action.ACTION_RESTORE_DEFAULT_CONFIG).putExtra("msg", "Are you sure?"));
-//                }else{
-//                    startActivityForResult(new Intent(viewHolder.itemView.getContext(), ChoiceActivity.class).putExtra("from", selectedItemPosition), selectedItemPosition);
-//                }
             }
 
             @Override
@@ -94,11 +93,12 @@ public class ConfigActivity extends Activity {
     private ArrayList<String> configMenu(){
         ArrayList<String> list = new ArrayList<String>();
 
-        list.add("Set Idle Time");
-        list.add("Set steps before moral loss");
-        list.add("Set Progress steps");
+        list.add("Set Idle Time to " + PreferenceHelper.getInstance(this).getInt(Config.Keys.KEY_IDLE_TIME, Config.IDLE_TIME));
+        list.add("Set steps before moral loss to " + PreferenceHelper.getInstance(this).getInt(Config.Keys.KEY_STEP_MORAL_LOSS, Config.NUM_STEPS_TO_TRIGGER_MORAL_LOSS));
+        list.add("Set Progress steps to " + PreferenceHelper.getInstance(this).getInt(Config.Keys.KEY_PROGRESS_STEPS, Config.PROGRESS_BAR_STEPS));
         list.add("Reset Step Count");
         list.add("Restore to Default");
+        list.add("Check sensors");
 
         return list;
     }
