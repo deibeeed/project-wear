@@ -1,10 +1,12 @@
-package com.kfast.uitest;
+package com.kfast.uitest.dialogprefs;
 
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.TypedArray;
 import android.preference.DialogPreference;
 import android.util.AttributeSet;
+
+import com.kfast.uitest.R;
 
 /**
  * Created by David on 2015-03-07.

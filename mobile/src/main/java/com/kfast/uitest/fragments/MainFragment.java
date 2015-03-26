@@ -1,4 +1,4 @@
-package com.kfast.uitest;
+package com.kfast.uitest.fragments;
 
 import android.app.Activity;
 import android.app.Dialog;
@@ -22,7 +22,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -57,6 +56,12 @@ import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
+import com.kfast.uitest.R;
+import com.kfast.uitest.SettingsActivity;
+import com.kfast.uitest.model.UnsentSteps;
+import com.kfast.uitest.service.ActivityRecognitionIntentService;
+import com.kfast.uitest.utils.ObjectSerializer;
+import com.kfast.uitest.utils.Utils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -65,6 +70,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -496,6 +502,55 @@ public class MainFragment extends Fragment implements GoogleApiClient.Connection
         readFitnessData();
     }
 
+    private void insertFitnessData(int steps, GregorianCalendar date){
+        // Set a start and end time for our data, using a start time of 1 hour before this moment.
+        Calendar cal = date;
+//        Date now = new Date();
+//        cal.setTime(now);
+
+        long endTime = cal.getTimeInMillis();
+        cal.add(Calendar.SECOND, -1);
+        long startTime = cal.getTimeInMillis();
+
+        //Create DataSource
+        DataSource dataSource = new DataSource.Builder()
+                .setAppPackageName(getActivity())
+                .setDataType(DataType.TYPE_STEP_COUNT_DELTA)
+                .setName("project-watch step count")
+                .setType(DataSource.TYPE_RAW)
+                .build();
+
+        //Create DataSet
+        final DataSet dataSet = DataSet.create(dataSource);
+
+        // For each data point, specify a start time, end time, and the data value -- in this case,
+        // the number of new steps.
+        DataPoint dataPoint = dataSet.createDataPoint()
+                .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS);
+
+        dataPoint.getValue(Field.FIELD_STEPS).setInt(steps);
+        dataSet.add(dataPoint);
+
+        // Then, invoke the History API to insert the data and await the result, which is
+        // possible here because of the {@link AsyncTask}. Always include a timeout when calling
+        // await() to prevent hanging that can occur from the service being shutdown because
+        // of low memory or other conditions.
+        Log.i(FITNESS_TAG, "Inserting the dataset in the History API");
+
+        Status insertStatus = Fitness.HistoryApi.insertData(fitClient, dataSet).await(1, TimeUnit.MINUTES);
+
+        // Before querying the data, check to see if the insertion succeeded.
+        if(!insertStatus.isSuccess()){
+            Log.d(FITNESS_TAG, "There was a problem inserting the dataset.");
+            return;
+        }
+
+        // At this point, the data has been inserted and can be read.
+        Log.i(FITNESS_TAG, "Data insert was successful!");
+
+        readFitnessData();
+    }
+
     private void deleteAllFitnessData(){
         Calendar cal = Calendar.getInstance();
         Date now = new Date();
@@ -701,19 +756,111 @@ public class MainFragment extends Fragment implements GoogleApiClient.Connection
 
         if(messagePath.equals(MESSAGE_PATH)){
 //            activityRecognitionSetup();
-        }else if(messagePath.contains("/step-count")){
-                if(fitnessClintConnected){
-                    final String[] str = messagePath.split(Pattern.quote("-"));
+        }else if(messagePath.contains("/date/")){
+            if(fitnessClintConnected){
+                String[] str2 = messagePath.split(Pattern.quote("/"));
+                String[] str = str2[0].split(Pattern.quote("-"));
 
-                    Log.d("message_received", messagePath);
+                final int stepCount = Integer.parseInt(str[2]);
 
+                String[] strDate = str2[2].split(Pattern.quote("-"));
+                final GregorianCalendar datePosted = new GregorianCalendar(Integer.parseInt(strDate[0]), Integer.parseInt(strDate[1]), Integer.parseInt(strDate[2]));
+
+                Log.d("message_received", messagePath);
+
+                if(Utils.Network.hasNetworkConnection(getActivity())){
                     new AsyncTask<Void, Void, Void>() {
                         @Override
                         protected Void doInBackground(Void... params) {
-                            insertFitnessData(Integer.parseInt(str[2]));
+                            insertFitnessData(stepCount, datePosted);
                             return null;
                         }
                     }.execute();
+                }else{
+                    //TODO: send fitness data according to date
+
+//                    Calendar cal = Calendar.getInstance();
+//                    cal.setTimeInMillis(System.currentTimeMillis());
+
+                    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+                    String formattedDate = formatter.format(datePosted.getTime());
+
+                    boolean hasSameDate = false;
+
+                    ArrayList<UnsentSteps> listSteps = (ArrayList<UnsentSteps>) ObjectSerializer.loadSerializedObject(getActivity(), "MySteps", false);
+
+                    try{
+                        for(UnsentSteps stepDetail : listSteps){
+                            if(stepDetail.getDate().equals(formattedDate)){
+                                hasSameDate = true;
+
+                                stepDetail.setStepCount(stepDetail.getStepCount() + stepCount);
+                                break;
+                            }
+                        }
+
+                        if(!hasSameDate){
+                            listSteps.add(new UnsentSteps(formattedDate, stepCount));
+                        }
+
+                    }catch (NullPointerException e){
+                        e.printStackTrace();
+                        listSteps.add(new UnsentSteps(formattedDate, stepCount));
+                    }
+
+                    ObjectSerializer.saveSerializedObject(getActivity(), listSteps, "MySteps");
+                }
+            }
+        }else if(messagePath.contains("/step-count")){
+                if(fitnessClintConnected){
+                    String[] str = messagePath.split(Pattern.quote("-"));
+                    final int stepCount = Integer.parseInt(str[2]);
+
+                    Log.d("message_received", messagePath);
+
+                    if(Utils.Network.hasNetworkConnection(getActivity())){
+                        new AsyncTask<Void, Void, Void>() {
+                            @Override
+                            protected Void doInBackground(Void... params) {
+                                insertFitnessData(stepCount);
+                                return null;
+                            }
+                        }.execute();
+                    }else{
+                        //TODO: send fitness data according to date
+
+                        Calendar cal = Calendar.getInstance();
+                        cal.setTimeInMillis(System.currentTimeMillis());
+
+                        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+                        String formattedDate = formatter.format(cal.getTime());
+
+                        boolean hasSameDate = false;
+
+                        ArrayList<UnsentSteps> listSteps = (ArrayList<UnsentSteps>) ObjectSerializer.loadSerializedObject(getActivity(), "MySteps", false);
+
+                        try{
+                            for(UnsentSteps stepDetail : listSteps){
+                                if(stepDetail.getDate().equals(formattedDate)){
+                                    hasSameDate = true;
+
+                                    stepDetail.setStepCount(stepDetail.getStepCount() + stepCount);
+                                    break;
+                                }
+                            }
+
+                            if(!hasSameDate){
+                                listSteps.add(new UnsentSteps(formattedDate, stepCount));
+                            }
+
+                        }catch (NullPointerException e){
+                            e.printStackTrace();
+                            listSteps = new ArrayList<>();
+                            listSteps.add(new UnsentSteps(formattedDate, stepCount));
+                        }
+
+                        ObjectSerializer.saveSerializedObject(getActivity(), listSteps, "MySteps");
+                    }
                 }
         }
     }

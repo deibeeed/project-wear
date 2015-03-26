@@ -34,13 +34,13 @@
             android:negativeButtonText="@null"
             android:positiveButtonText="@null" />
 
-        <com.kfast.uitest.ResetCountDialogPreference
+        <com.kfast.uitest.dialogprefs.ResetCountDialogPreference
             android:key="reset_count"
             android:title="Reset Step Count"
             android:summary="Reset Step Count" />
 
 
-        <com.kfast.uitest.RestoreDefaultDialogPreference
+        <com.kfast.uitest.dialogprefs.RestoreDefaultDialogPreference
             android:key="restore_default"
             android:title="Restore Default"
             android:summary="Restore Default" />

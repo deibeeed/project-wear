@@ -1,4 +1,4 @@
-package com.kfast.uitest;
+package com.kfast.uitest.service;
 
 import android.app.Activity;
 import android.app.IntentService;

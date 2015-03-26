@@ -1,4 +1,4 @@
-package com.kfast.uitest;
+package com.kfast.uitest.receiver;
 
 import android.os.Bundle;
 import android.os.Handler;

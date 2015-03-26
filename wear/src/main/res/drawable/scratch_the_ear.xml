@@ -34,6 +34,10 @@
     <item android:drawable="@drawable/scratch_the_ear0030" android:duration="65" />
     <item android:drawable="@drawable/scratch_the_ear0031" android:duration="65" />
     <item android:drawable="@drawable/scratch_the_ear0032" android:duration="65" />
+    <item android:drawable="@drawable/scratch_the_ear0033" android:duration="65" />
+    <item android:drawable="@drawable/scratch_the_ear0034" android:duration="65" />
+    <item android:drawable="@drawable/scratch_the_ear0035" android:duration="65" />
+    <item android:drawable="@drawable/scratch_the_ear0036" android:duration="65" />
     <item android:drawable="@drawable/hold_still0001" android:duration="65" />
 
 </animation-list>

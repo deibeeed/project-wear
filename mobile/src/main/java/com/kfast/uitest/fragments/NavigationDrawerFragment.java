@@ -1,4 +1,4 @@
-package com.kfast.uitest;
+package com.kfast.uitest.fragments;
 
 import android.support.v7.app.ActionBarActivity;
 import android.app.Activity;
@@ -23,6 +23,8 @@ import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.Toast;
+
+import com.kfast.uitest.R;
 
 /**
  * Fragment used for managing interactions for and presentation of a navigation drawer.

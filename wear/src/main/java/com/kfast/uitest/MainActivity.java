@@ -2,12 +2,11 @@ package com.kfast.uitest;
 
 import android.app.Activity;
 import android.app.ActivityManager;
-import android.app.Dialog;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.IntentSender;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -19,8 +18,7 @@ import android.hardware.SensorManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.NonNull;
-import android.support.v4.app.DialogFragment;
+import android.os.Vibrator;
 import android.support.wearable.view.DismissOverlayView;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -28,7 +26,6 @@ import android.view.View;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.DigitalClock;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -42,7 +39,6 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.ActivityRecognitionApi;
-import com.google.android.gms.plus.Plus;
 import com.google.android.gms.wearable.Asset;
 import com.google.android.gms.wearable.DataApi;
 import com.google.android.gms.wearable.DataEvent;
@@ -51,19 +47,24 @@ import com.google.android.gms.wearable.DataMapItem;
 import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
+import com.kfast.uitest.model.UnsentSteps;
 import com.kfast.uitest.receiver.ActivityRecognitionReceiver;
+import com.kfast.uitest.receiver.FitPetBroadcastReceiver;
 import com.kfast.uitest.service.ActivityRecognitionIntentService;
+import com.kfast.uitest.service.AlarmService;
 import com.kfast.uitest.service.StepService;
 import com.kfast.uitest.util.Config;
+import com.kfast.uitest.util.ObjectSerializer;
 import com.kfast.uitest.util.PreferenceHelper;
 
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashSet;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 public class MainActivity extends Activity implements SimpleGestureFilter.SimpleGestureListener,
 		SensorEventListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, DataApi.DataListener {
@@ -137,6 +138,8 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
     private boolean firstRun;
     private boolean startStepCount;
     private int totalStepCount;
+
+    private Vibrator vibrator;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -251,9 +254,68 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
             protected Void doInBackground(Void... params) {
                 Collection<String> nodes = getNodes();
 
-                for(String node : nodes){
-                    Log.d("node", "node id: " + node);
-                    Wearable.MessageApi.sendMessage(wearClient, node, path, new byte[0]);
+                if(nodes.size() > 0){
+                    for(String node : nodes){
+                        Log.d("node", "node id: " + node);
+
+                        Wearable.MessageApi.sendMessage(wearClient, node, path, new byte[0]);
+
+                        if(path.contains(RECORD_STEPS_PATH)){
+                            String[] str = path.split(Pattern.quote("-"));
+                            int stepCount = Integer.parseInt(str[2]);
+
+                            ArrayList<UnsentSteps> listSteps = (ArrayList<UnsentSteps>) ObjectSerializer.loadSerializedObject(MainActivity.this, "MySteps", false);
+
+                            if(listSteps != null){
+                                for(UnsentSteps steps : listSteps){
+                                    String newPath = RECORD_STEPS_PATH + steps.getStepCount() + "/date/" + steps.getDate();
+                                    Wearable.MessageApi.sendMessage(wearClient, node, newPath, new byte[0]);
+
+                                    listSteps.remove(steps);
+                                }
+
+                                ObjectSerializer.saveSerializedObject(MainActivity.this, listSteps, "MySteps");
+                            }
+                        }
+                    }
+                }else{
+
+                    if(path.contains(RECORD_STEPS_PATH)){
+                        String[] str = path.split(Pattern.quote("-"));
+                        int stepCount = Integer.parseInt(str[2]);
+
+                        Calendar cal = Calendar.getInstance();
+                        cal.setTimeInMillis(System.currentTimeMillis());
+
+                        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+                        String formattedDate = formatter.format(cal.getTime());
+
+                        boolean hasSameDate = false;
+
+                        ArrayList<UnsentSteps> listSteps = (ArrayList<UnsentSteps>) ObjectSerializer.loadSerializedObject(MainActivity.this, "MySteps", false);
+
+                        try{
+                            for(UnsentSteps stepDetail : listSteps){
+                                if(stepDetail.getDate().equals(formattedDate)){
+                                    hasSameDate = true;
+
+                                    stepDetail.setStepCount(stepDetail.getStepCount() + stepCount);
+                                    break;
+                                }
+                            }
+
+                            if(!hasSameDate){
+                                listSteps.add(new UnsentSteps(formattedDate, stepCount));
+                            }
+
+                        }catch (NullPointerException e){
+                            e.printStackTrace();
+                            listSteps = new ArrayList<UnsentSteps>();
+                            listSteps.add(new UnsentSteps(formattedDate, stepCount));
+                        }
+
+                        ObjectSerializer.saveSerializedObject(MainActivity.this, listSteps, "MySteps");
+                    }
                 }
                 return null;
             }
@@ -342,6 +404,7 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
 //        ivSettings = (ImageView) findViewById(R.id.ivSettings);
         tvProgressCount = (TextView) findViewById(R.id.tvProgressCount);
         tvProgressTotal = (TextView) findViewById(R.id.tvProgressTotal);
+        vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 //		initSlideLayouts();
 
 //        listAnimIds.add(R.drawable.scratch_the_ear);
@@ -435,7 +498,7 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
                 }else{
                     Log.d("action", "still");
 
-                    if(stillTimeHolder == Config.REFRESH_ANIM) {
+                    if(stillTimeHolder == PreferenceHelper.getInstance(MainActivity.this).getInt(Config.Keys.KEY_IDLE_TIME, Config.IDLE_TIME)/*Config.REFRESH_ANIM*/) {
                         stillTimeHolder = 0;
                         runAnimationCorrespondingActivityRecognized("still");
                     }else if(stillTimeHolder == 0){
@@ -468,15 +531,24 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
 
         TextClock clock = (TextClock) findViewById(R.id.clock);
 
-        if(clock.getText().equals("00:00")){
-            totalStepCount = 0;
-            PreferenceHelper.getInstance(this).setInt("stepCount", 0);
+//        if(clock.getText().equals("00:00")){
+//            totalStepCount = 0;
+//            PreferenceHelper.getInstance(this).setInt("stepCount", 0);
+//        }else{
+//            totalStepCount = PreferenceHelper.getInstance(this).getInt("stepCount", 0);
+//        }
+
+        totalStepCount = PreferenceHelper.getInstance(this).getInt(Config.Keys.KEY_STEP_COUNT, 0);
+        int maxProgress = PreferenceHelper.getInstance(this).getInt(Config.Keys.KEY_PROGRESS_STEPS, Config.PROGRESS_BAR_STEPS);
+
+        if(totalStepCount > maxProgress){
+            progressBar.setProgress(maxProgress);
         }else{
-            totalStepCount = PreferenceHelper.getInstance(this).getInt("stepCount", 0);
+            progressBar.setProgress(PreferenceHelper.getInstance(this).getInt(Config.Keys.KEY_STEP_COUNT, 0));
         }
 
-        tvProgressCount.setText(PreferenceHelper.getInstance(this).getInt("stepCount", 0) + "");
-        progressBar.setProgress(PreferenceHelper.getInstance(this).getInt("stepCount", 0));
+        tvProgressCount.setText(PreferenceHelper.getInstance(this).getInt(Config.Keys.KEY_STEP_COUNT, 0) + "");
+
         progressBar.setMax(PreferenceHelper.getInstance(this).getInt(Config.Keys.KEY_PROGRESS_STEPS, Config.PROGRESS_BAR_STEPS));
         tvProgressTotal.setText(progressBar.getMax() + "");
 
@@ -490,9 +562,9 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
     protected void onPause() {
         super.onPause();
 
-        if(!isServiceRunning(StepService.class) && !Config.HAS_EXIT_APP){
-            startService(new Intent(this, StepService.class));
-        }
+//        if(!isServiceRunning(StepService.class) && !Config.HAS_EXIT_APP){
+//            startService(new Intent(this, StepService.class));
+//        }
     }
 
     @Override
@@ -501,6 +573,16 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
 
         if(!wearClient.isConnected())
             wearClient.connect();
+
+//        try{
+//            registerReceiver(new FitPetBroadcastReceiver(), new IntentFilter(Config.Action.ACTION_BROADCAST_ALARM));
+//            sendBroadcast(new Intent(Config.Action.ACTION_BROADCAST_ALARM).putExtra("startedFrom", "activity"));
+//        }catch (Exception e){
+//            e.printStackTrace();
+//        }
+
+        if(!isServiceRunning(AlarmService.class))
+            startService(new Intent(this, AlarmService.class));
 
 		sensorManager.registerListener(this, stepDetector, SensorManager.SENSOR_DELAY_FASTEST);
         sensorManager.registerListener(this, stepCounter, SensorManager.SENSOR_DELAY_FASTEST);
@@ -562,7 +644,7 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
                 tvProgressCount.setText(totalStepCount + "");
 
 //                PreferenceHelper.getInstance(this).setInt("stepCount", progressBar.getProgress());
-                PreferenceHelper.getInstance(this).setInt("stepCount", totalStepCount);
+                PreferenceHelper.getInstance(this).setInt(Config.Keys.KEY_STEP_COUNT, totalStepCount);
 
 //                stepHolder += 1;
 
@@ -603,7 +685,7 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
                 startAnimation(true);
             }
             else
-                Toast.makeText(this, "Not enough steps, trick Fetch ins not yet locked!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Not enough steps, trick Fetch is not yet unlocked!", Toast.LENGTH_SHORT).show();
 
 			break;
 		case SimpleGestureFilter.SWIPE_UP:
@@ -614,7 +696,7 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
                 startAnimation(true);
             }
             else
-                Toast.makeText(this, "Not enough steps, trick Roll Over ins not yet locked!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Not enough steps, trick Roll Over is not yet unlocked!", Toast.LENGTH_SHORT).show();
 
 			break;
 		case SimpleGestureFilter.SWIPE_RIGHT:
@@ -625,7 +707,7 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
                 startAnimation(true);
             }
             else
-                Toast.makeText(this, "Not enough steps, trick Play Dead ins not yet locked!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Not enough steps, trick Play Dead is not yet unlocked!", Toast.LENGTH_SHORT).show();
 
 			break;
 		case SimpleGestureFilter.SWIPE_DOWN:
@@ -635,7 +717,7 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
                 startAnimation(true);
             }
             else
-                Toast.makeText(this, "Not enough steps, trick Scratch the Ear ins not yet locked!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Not enough steps, trick Scratch the Ear is not yet unlocked!", Toast.LENGTH_SHORT).show();
 			break;
 		}
 
@@ -688,7 +770,7 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
 		    dismissOverlay.show();
         Config.HAS_EXIT_APP = true;
 //        PreferenceHelper.getInstance(this).setInt("stepCount", 0);
-        stopService(new Intent(this, StepService.class));
+//        stopService(new Intent(this, StepService.class));
 
 //        int progress = (progressBar.getProgress() % 50 != 0 ? progressBar.getProgress() % 50 : 50);
         int progress = (totalStepCount % 50 != 0 ? totalStepCount % 50 : 50);
@@ -748,7 +830,7 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
                         }
                     });
                 }else if(key.equals(Config.Keys.KEY_RESET_STEP_COUNT)){
-//                    PreferenceHelper.getInstance(this).setBoolean(key, Boolean.parseBoolean(value));
+                    PreferenceHelper.getInstance(this).setInt(Config.Keys.KEY_STEP_COUNT, 0);
 
                     runOnUiThread(new Runnable() {
                         @Override
@@ -872,21 +954,25 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
         }
 
         if(progress >= (progressBarSteps * .25) && !isSwipeLeftUnlocked) {
+            vibrator.vibrate(40);
             isSwipeLeftUnlocked = true;
             Toast.makeText(this, "Hoooray! Swipe Left trick unlocked!", Toast.LENGTH_SHORT).show();
         }
 
         if(progress >= (progressBarSteps * .75) && !isSwipeUpUnlocked) {
+            vibrator.vibrate(40);
             isSwipeUpUnlocked = true;
             Toast.makeText(this, "Hoooray! Swipe Up trick unlocked!", Toast.LENGTH_SHORT).show();
         }
 
         if(progress >= (progressBarSteps * .50) && !isSwipeRightUnlocked) {
+            vibrator.vibrate(40);
             isSwipeRightUnlocked =  true;
             Toast.makeText(this, "Hoooray! Swipe Right trick unlocked!", Toast.LENGTH_SHORT).show();
         }
 
         if(progress >= progressBarSteps && !isSwipeDownUnlocked) {
+            vibrator.vibrate(40);
             isSwipeDownUnlocked = true;
             Toast.makeText(this, "Hoooray! Swipe down trick unlocked!", Toast.LENGTH_SHORT).show();
         }

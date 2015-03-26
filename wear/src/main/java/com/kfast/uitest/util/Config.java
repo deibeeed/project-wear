@@ -14,6 +14,8 @@ public class Config {
     public static class Action{
         public static final String ACTION_RESTORE_DEFAULT_CONFIG = "config_restore_default";
         public static final String ACTION_RESET_STEP_COUNT = "reset_step_count";
+        public static final String ACTION_BROADCAST_ALARM = "start_broadcast_alarm";
+        public static final String ACTION_SERVICE_ALARM = "start_alarm_service";
     }
 
     public static class Keys{
@@ -21,6 +23,7 @@ public class Config {
         public static final String KEY_STEP_MORAL_LOSS = "steps_to_moral_loss";
         public static final String KEY_PROGRESS_STEPS = "progress_steps";
         public static final String KEY_RESET_STEP_COUNT = "reset_count";
+        public static final String KEY_STEP_COUNT = "stepCount";
         public static final String KEY_RESTORE_DEFAULT = "restore_default";
     }
 }
