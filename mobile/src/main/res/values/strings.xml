@@ -37,7 +37,7 @@
 
     <string name="nav_menu_title1">Home</string>
     <string name="nav_menu_title2">Settings</string>
-    <string name="nav_menu_title3">Menu 3</string>
+    <string name="nav_menu_title3">Animation</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>

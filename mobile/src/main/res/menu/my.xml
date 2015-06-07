@@ -18,4 +18,10 @@
     <item android:id="@+id/action_settings2"
         android:title="@string/action_settings"
         app:showAsAction="ifRoom|withText" />
+    <item android:id="@+id/action_notif"
+        android:title="Test download notification"
+        app:showAsAction="ifRoom|withText" />
+    <item android:id="@+id/action_download"
+        android:title="Test Download"
+        app:showAsAction="ifRoom|withText" />
 </menu>

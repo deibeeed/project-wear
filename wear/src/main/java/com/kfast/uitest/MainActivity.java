@@ -8,15 +8,18 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.AnimationDrawable;
+import android.graphics.drawable.BitmapDrawable;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Vibrator;
 import android.support.wearable.view.DismissOverlayView;
@@ -47,6 +50,7 @@ import com.google.android.gms.wearable.DataMapItem;
 import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
+import com.kfast.uitest.model.AnimationDirectory;
 import com.kfast.uitest.model.UnsentSteps;
 import com.kfast.uitest.receiver.ActivityRecognitionReceiver;
 import com.kfast.uitest.receiver.FitPetBroadcastReceiver;
@@ -57,6 +61,12 @@ import com.kfast.uitest.util.Config;
 import com.kfast.uitest.util.ObjectSerializer;
 import com.kfast.uitest.util.PreferenceHelper;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -164,6 +174,11 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
         //initialize google client
         initGoogleApiClient();
 
+//        Log.wtf("img_exist", "does chrome_icon.png exist? " + isBitmapExist("chrome_icon.png"));
+//
+//        if(isBitmapExist("chrome_icon.png")){
+//            canvas.setImageBitmap(getBitmapFromDisk("chrome_icon.png"));
+//        }
 	}
 
     private void initGoogleApiClient(){
@@ -485,23 +500,23 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
             @Override
             public void run() {
                 Log.d("step counter", "num of steps: " + stepHolder);
-                if(stepHolder > 0 && stepHolder <= 3){
+                if (stepHolder > 0 && stepHolder <= 3) {
 //                    Toast.makeText(MainActivity.this, "walking", Toast.LENGTH_SHORT).show();
                     Log.d("action", "walking");
                     stillTimeHolder = 0;
                     runAnimationCorrespondingActivityRecognized("walking");
-                }else if(stepHolder > 3){
+                } else if (stepHolder > 3) {
 //                    Toast.makeText(MainActivity.this, "running", Toast.LENGTH_SHORT).show();
                     Log.d("action", "running");
                     stillTimeHolder = 0;
                     runAnimationCorrespondingActivityRecognized("running");
-                }else{
+                } else {
                     Log.d("action", "still");
 
-                    if(stillTimeHolder == PreferenceHelper.getInstance(MainActivity.this).getInt(Config.Keys.KEY_IDLE_TIME, Config.IDLE_TIME)/*Config.REFRESH_ANIM*/) {
+                    if (stillTimeHolder == PreferenceHelper.getInstance(MainActivity.this).getInt(Config.Keys.KEY_IDLE_TIME, Config.IDLE_TIME)/*Config.REFRESH_ANIM*/) {
                         stillTimeHolder = 0;
                         runAnimationCorrespondingActivityRecognized("still");
-                    }else if(stillTimeHolder == 0){
+                    } else if (stillTimeHolder == 0) {
                         playAnimalAnim(R.drawable.hold_still_b);
                     }
 
@@ -758,9 +773,12 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
 	@Override
 	public void onSingleTapConfirmed() {
 //		hideSlideLayouts();
-        playAnimalAnim(R.drawable.eat_a_treat);
+        //TODO: uncomment codes below after testing
+//        playAnimalAnim(R.drawable.eat_a_treat);
+//
+//        startAnimation(true);
 
-        startAnimation(true);
+        playAnimationFromDisk("trick5");
 	}
 
 	@Override
@@ -857,9 +875,15 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
                 }else{
                     PreferenceHelper.getInstance(this).setInt(key, Integer.parseInt(value));
                 }
-            }
+            }else{
+                Bitmap bmp = loadBitmapFromAsset(item.getDataMap().getAsset("img"));
+//                canvas.setImageBitmap(bmp);
 
-            canvas.setImageBitmap(loadBitmapFromAsset(item.getDataMap().getAsset("img")));
+                String imgName = item.getDataMap().getString("img_name");
+                String animGroup = item.getDataMap().getString("anim_group");
+                Log.d("data_from_phone", "anim group: " + animGroup + " img name: " + imgName);
+                saveBitmapToDisk(bmp, animGroup, imgName);
+            }
         }
     }
 
@@ -873,10 +897,15 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
 
                 if(activityRecognized.equalsIgnoreCase("walking")) {
 //                    handler.removeCallbacksAndMessages(null);
-                    playAnimalAnim(R.drawable.walking);
+                    //TODO: uncomment file below after testing
+//                    playAnimalAnim(R.drawable.walking);
+                    playAnimationFromDisk("walk");
                 }else if(activityRecognized.equalsIgnoreCase("running")){
 //                    handler.removeCallbacksAndMessages(null);
-                    playAnimalAnim(R.drawable.running);
+
+                    //TODO: uncomment file bellow after testing
+//                    playAnimalAnim(R.drawable.running);
+                    playAnimationFromDisk("run");
                 }else if(activityRecognized.equalsIgnoreCase("still")){
 //                    playAnimalAnim(R.drawable.scratch_the_ear);
 
@@ -929,6 +958,127 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
         }
 
         return BitmapFactory.decodeStream(iStream);
+    }
+
+    private void saveBitmapToDisk(Bitmap bitmap, String animGroup, String imgName){
+//        String imgPath = Environment.getExternalStorageDirectory() + "/fitpet/";
+
+        String imgPath = getExternalCacheDir() + "/";
+        File file = new File(imgPath);
+
+        file.mkdirs();
+
+        try {
+            BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(imgPath + imgName));
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, bos);
+            bos.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        ArrayList<AnimationDirectory> listAnims = (ArrayList<AnimationDirectory>) ObjectSerializer.loadSerializedObject(this, "fitpet-anims", false);
+        ArrayList<AnimationDirectory> listAnimToAdd = new ArrayList<>();
+
+        if(listAnims != null){
+            boolean hasInserted = false;
+            for(AnimationDirectory animationDirectory : listAnims){
+                if(animationDirectory.getAnimationGroup().equalsIgnoreCase(animGroup)){
+                    ArrayList<String> listAnimationItem = animationDirectory.getAnimationItem();
+
+                    listAnimationItem.add(imgName);
+                    hasInserted = true;
+                }
+            }
+
+            if(!hasInserted){
+                ArrayList<String> listAnimItems = new ArrayList<>();
+                listAnimItems.add(imgName);
+                listAnims.add(new AnimationDirectory(animGroup, listAnimItems));
+            }
+        }else{
+            listAnims = new ArrayList<>();
+            ArrayList<String> listAnimItems = new ArrayList<>();
+            listAnimItems.add(imgName);
+            listAnims.add(new AnimationDirectory(animGroup, listAnimItems));
+        }
+
+        if(listAnimToAdd.size() > 0){
+            listAnims.addAll(listAnimToAdd);
+            Log.d("save_to_disk", "added new group");
+        }
+
+
+
+        ObjectSerializer.saveSerializedObject(this, listAnims, "fitpet-anims");
+    }
+
+    private boolean isBitmapExist(String imgName){
+        boolean flag = false;
+//        String imgPath = Environment.getExternalStorageDirectory() + "/fitpet/" + imgName;
+        String imgPath = getExternalCacheDir() + "/" + imgName;
+
+        try {
+            FileInputStream fis = new FileInputStream(imgPath);
+            if(fis != null){
+                flag = true;
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return flag;
+    }
+
+    private Bitmap getBitmapFromDisk(String imgName){
+//        String imgPath = Environment.getExternalStorageDirectory() + "/fitpet/" + imgName;
+        String imgPath = getExternalCacheDir() + "/" + imgName;
+        try {
+            FileInputStream fis = new FileInputStream(imgPath);
+
+            return BitmapFactory.decodeStream(fis);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+
+            return null;
+        }
+    }
+
+    public void playAnimationFromDisk(String action){
+        ArrayList<AnimationDirectory> listAnims = (ArrayList<AnimationDirectory>) ObjectSerializer.loadSerializedObject(this, "fitpet-anims", false);
+        AnimationDrawable animationDrawable = new AnimationDrawable();
+
+        if(listAnims != null){
+            if(listAnims.size() > 0){
+                for (AnimationDirectory animationDirectory : listAnims){
+                    Log.d("img_", "img path" + animationDirectory.getAnimationGroup());
+                    if(animationDirectory.getAnimationGroup().contains(action)){
+                        for(String imgName : animationDirectory.getAnimationItem()){
+                            String imgPath = getExternalCacheDir() + "/" + imgName;
+                            Log.d("path_to_exec", "img path: " + imgPath + " imgGroup: " + animationDirectory.getAnimationGroup());
+                            animationDrawable.addFrame(new BitmapDrawable(BitmapFactory.decodeFile(imgPath)), 55);
+                        }
+
+                        break;
+                    }else{
+                        Log.d("img_not_found", "animation group: " + animationDirectory.getAnimationGroup());
+                    }
+                }
+            }
+
+            canvas.setImageDrawable(animationDrawable);
+            animationDrawable.setOneShot(false);
+            animationDrawable.start();
+        }
+
+        //checking
+
+//        File file = getExternalCacheDir();
+//
+//        for(File f : file.listFiles()){
+//            Log.d("in_file", f.getAbsolutePath());
+//        }
     }
 
     private boolean isServiceRunning(Class service){

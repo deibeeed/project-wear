@@ -1,9 +1,13 @@
 package com.kfast.uitest.fragments;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.DownloadManager;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.res.AssetManager;
@@ -12,9 +16,11 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -23,6 +29,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -61,11 +68,17 @@ import com.kfast.uitest.SettingsActivity;
 import com.kfast.uitest.model.UnsentSteps;
 import com.kfast.uitest.service.ActivityRecognitionIntentService;
 import com.kfast.uitest.utils.ObjectSerializer;
+import com.kfast.uitest.utils.PreferenceHelper;
 import com.kfast.uitest.utils.Utils;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -277,7 +290,20 @@ public class MainFragment extends Fragment implements GoogleApiClient.Connection
                 stopUpdates();
                 break;
             case R.id.action_send_image_to_wear:
-                startSendDataToWear();
+//                startSendDataToWear();
+
+                File grandParent = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator + "fitpet" + File.separator);
+
+                if(grandParent.listFiles().length > 0){
+                    for(File parent : grandParent.listFiles()){
+                        if(parent.listFiles().length > 0){
+                            for(File childFile : parent.listFiles()){
+                                sendPetImageToWear(BitmapFactory.decodeFile(childFile.getAbsolutePath()), parent.getName(), childFile.getName());
+//                                Log.d("path_to_send", "child absolute path: " + childFile.getAbsolutePath() + " parent name: " + parent.getName() + " child name: " + childFile.getName());
+                            }
+                        }
+                    }
+                }
                 break;
             case R.id.action_stop_fitness_recording:
                 stopFitnessRecording();
@@ -300,6 +326,658 @@ public class MainFragment extends Fragment implements GoogleApiClient.Connection
                         return null;
                     }
                 }.execute();
+                break;
+
+            case R.id.action_notif:
+                processNotification(null, false);
+                break;
+
+            case R.id.action_download:
+                //without ip address implementation
+                ArrayList<String> listUrls = new ArrayList<>();
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_running_compressed/cat_running0001.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_running_compressed/cat_running0002.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_running_compressed/cat_running0003.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_running_compressed/cat_running0004.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_running_compressed/cat_running0005.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_running_compressed/cat_running0006.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_running_compressed/cat_running0007.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_running_compressed/cat_running0008.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_running_compressed/cat_running0009.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_running_compressed/cat_running0010.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_running_compressed/cat_running0011.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_running_compressed/cat_running0012.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_running_compressed/cat_running0013.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_running_compressed/cat_running0014.png");
+                //cat walking
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0001.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0002.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0003.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0004.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0005.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0006.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0007.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0008.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0009.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0010.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0011.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0012.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0013.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0014.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0015.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0016.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0017.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0018.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0019.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0020.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0021.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0022.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0023.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0024.png");
+
+                //cat sill 1
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10001.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10002.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10003.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10004.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10005.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10006.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10007.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10008.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10009.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10010.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10011.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10012.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10013.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10014.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10015.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10016.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10017.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10018.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10019.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10020.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10021.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10022.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10023.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10024.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10025.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10026.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10027.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10028.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10029.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10030.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10031.png");
+
+                //cat still 2
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20001.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20002.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20003.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20004.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20005.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20006.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20007.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20010.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20011.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20009.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20008.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20012.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20013.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20014.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20015.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20016.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20017.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20018.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20019.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20020.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20021.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20022.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20023.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20024.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20025.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20026.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20027.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20028.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20029.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20030.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20031.png");
+
+                //cat still 3
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30001.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30002.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30003.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30004.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30005.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30006.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30007.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30010.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30011.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30009.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30008.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30012.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30013.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30014.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30015.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30016.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30017.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30018.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30019.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30020.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30021.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30022.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30023.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30024.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30025.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30026.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30027.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30028.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30029.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30030.png");
+
+                //cat trick 1
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10001.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10002.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10003.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10004.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10005.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10006.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10007.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10008.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10009.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10010.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10011.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10012.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10013.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10014.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10015.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10016.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10017.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10018.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10019.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10020.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10021.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10022.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10023.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10024.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10025.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10026.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10027.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10028.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10029.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10030.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10031.png");
+
+                //cat trick 2
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20001.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20002.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20003.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20004.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20005.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20006.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20007.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20010.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20011.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20009.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20008.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20012.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20013.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20014.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20015.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20016.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20017.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20018.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20019.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20020.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20021.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20022.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20023.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20024.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20025.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20026.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20027.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20028.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20029.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20030.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20031.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20032.png");
+
+                //cat trick 3
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30001.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30002.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30003.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30004.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30005.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30006.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30007.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30010.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30011.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30009.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30008.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30012.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30013.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30014.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30015.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30016.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30017.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30018.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30019.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30020.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30021.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30022.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30023.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30024.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30025.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30026.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30027.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30028.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30029.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30030.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30031.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30032.png");
+
+                //cat trick 4
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40001.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40002.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40003.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40004.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40005.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40006.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40007.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40010.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40011.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40009.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40008.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40012.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40013.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40014.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40015.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40016.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40017.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40018.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40019.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40020.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40021.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40022.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40023.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40024.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40025.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40026.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40027.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40028.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40029.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40030.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40031.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40032.png");
+
+                //cat trick 5
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50001.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50002.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50003.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50004.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50005.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50006.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50007.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50010.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50011.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50009.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50008.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50012.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50013.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50014.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50015.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50016.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50017.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50018.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50019.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50020.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50021.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50022.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50023.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50024.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50025.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50026.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50027.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50028.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50029.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50030.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50031.png");
+                listUrls.add("http://192.168.8.105/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50032.png");
+
+
+                new ImageDownloadTask(getActivity(), listUrls).execute();
+
+                //with custom ip address implementation
+//                String ipAddress = PreferenceHelper.getInstance(getActivity()).getString("ip_address", null);
+//
+//                if(ipAddress != null){
+//                    ArrayList<String> listUrls = new ArrayList<>();
+//                    //cat running
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_running_compressed/cat_running0001.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_running_compressed/cat_running0002.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_running_compressed/cat_running0003.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_running_compressed/cat_running0004.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_running_compressed/cat_running0005.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_running_compressed/cat_running0006.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_running_compressed/cat_running0007.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_running_compressed/cat_running0008.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_running_compressed/cat_running0009.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_running_compressed/cat_running0010.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_running_compressed/cat_running0011.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_running_compressed/cat_running0012.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_running_compressed/cat_running0013.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_running_compressed/cat_running0014.png");
+//                    //cat walking
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0001.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0002.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0003.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0004.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0005.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0006.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0007.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0008.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0009.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0010.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0011.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0012.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0013.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0014.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0015.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0016.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0017.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0018.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0019.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0020.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0021.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0022.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0023.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_walking_compressed/cat_walking0024.png");
+//
+//                    //cat sill 1
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10001.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10002.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10003.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10004.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10005.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10006.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10007.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10008.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10009.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10010.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10011.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10012.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10013.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10014.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10015.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10016.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10017.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10018.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10019.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10020.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10021.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10022.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10023.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10024.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10025.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10026.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10027.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10028.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10029.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10030.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still1_compressed/cat_still10031.png");
+//
+//                    //cat still 2
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20001.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20002.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20003.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20004.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20005.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20006.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20007.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20010.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20011.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20009.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20008.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20012.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20013.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20014.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20015.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20016.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20017.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20018.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20019.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20020.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20021.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20022.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20023.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20024.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20025.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20026.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20027.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20028.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20029.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20030.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still2_compressed/cat_still20031.png");
+//
+//                    //cat still 3
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30001.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30002.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30003.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30004.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30005.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30006.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30007.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30010.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30011.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30009.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30008.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30012.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30013.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30014.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30015.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30016.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30017.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30018.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30019.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30020.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30021.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30022.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30023.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30024.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30025.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30026.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30027.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30028.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30029.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_still3_compressed/cat_still30030.png");
+//
+//                    //cat trick 1
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10001.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10002.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10003.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10004.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10005.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10006.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10007.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10008.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10009.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10010.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10011.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10012.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10013.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10014.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10015.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10016.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10017.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10018.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10019.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10020.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10021.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10022.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10023.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10024.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10025.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10026.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10027.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10028.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10029.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10030.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick1_compressed/cat_trick10031.png");
+//
+//                    //cat trick 2
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20001.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20002.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20003.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20004.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20005.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20006.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20007.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20010.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20011.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20009.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20008.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20012.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20013.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20014.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20015.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20016.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20017.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20018.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20019.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20020.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20021.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20022.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20023.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20024.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20025.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20026.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20027.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20028.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20029.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20030.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20031.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick2_compressed/cat_trick20032.png");
+//
+//                    //cat trick 3
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30001.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30002.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30003.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30004.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30005.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30006.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30007.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30010.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30011.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30009.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30008.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30012.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30013.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30014.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30015.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30016.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30017.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30018.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30019.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30020.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30021.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30022.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30023.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30024.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30025.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30026.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30027.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30028.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30029.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30030.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30031.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick3_compressed/cat_trick30032.png");
+//
+//                    //cat trick 4
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40001.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40002.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40003.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40004.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40005.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40006.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40007.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40010.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40011.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40009.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40008.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40012.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40013.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40014.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40015.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40016.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40017.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40018.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40019.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40020.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40021.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40022.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40023.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40024.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40025.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40026.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40027.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40028.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40029.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40030.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40031.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick4_compressed/cat_trick40032.png");
+//
+//                    //cat trick 5
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50001.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50002.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50003.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50004.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50005.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50006.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50007.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50010.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50011.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50009.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50008.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50012.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50013.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50014.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50015.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50016.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50017.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50018.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50019.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50020.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50021.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50022.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50023.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50024.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50025.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50026.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50027.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50028.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50029.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50030.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50031.png");
+//                    listUrls.add("http://" + ipAddress + "/fitpet/cat_animations_compressed/cat_trick5_compressed/cat_trick50032.png");
+//
+//
+//                    new ImageDownloadTask(getActivity(), listUrls).execute();
+//                }else{
+//                    final EditText etIpAddress = new EditText(getActivity());
+//                    etIpAddress.setHint("enter ip address");
+//
+//                    new AlertDialog.Builder(getActivity())
+//                            .setTitle("Set IP Address")
+//                            .setMessage("Your IP address is not yet set. Please set your IP address and click again this option")
+//                            .setView(etIpAddress)
+//                            .setNeutralButton("OK", new DialogInterface.OnClickListener() {
+//                                @Override
+//                                public void onClick(DialogInterface dialog, int which) {
+//                                    ((ViewGroup)etIpAddress.getParent()).removeView(etIpAddress);
+//                                    PreferenceHelper.getInstance(getActivity()).setString("ip_address", etIpAddress.getText().toString());
+//                                }
+//                            })
+//                            .show();
+//                }
+
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -921,9 +1599,31 @@ public class MainFragment extends Fragment implements GoogleApiClient.Connection
     }
 
     private void startSendDataToWear(){
+        //TODO: make getting and sending of name dynamic
         PutDataMapRequest dataMap = PutDataMapRequest.create("/test");
         dataMap.getDataMap().putString("message", "this is test message");
         dataMap.getDataMap().putAsset("img", createAssetFromBitmap(getBitmapFromAssets()));
+        dataMap.getDataMap().putString("imgName", "chrome_icon.png");
+        dataMap.getDataMap().putLong("timestamp", System.currentTimeMillis());
+        PutDataRequest request = dataMap.asPutDataRequest();
+        wearPendingResult = Wearable.DataApi.putDataItem(wearClient,  request);
+
+        wearPendingResult.setResultCallback(new ResultCallback<DataApi.DataItemResult>() {
+            @Override
+            public void onResult(DataApi.DataItemResult dataItemResult) {
+                Log.d("wear pending result", "status: " + dataItemResult.getStatus().getStatus() + "result: " + dataItemResult.getDataItem().getUri());
+                Toast.makeText(getActivity(), "status: " + dataItemResult.getStatus().getStatus() + "result: " + dataItemResult.getDataItem().getUri(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void sendPetImageToWear(Bitmap bmp, String animGroup, String imgName){
+        //TODO: make getting and sending of name dynamic
+        PutDataMapRequest dataMap = PutDataMapRequest.create("/test");
+        dataMap.getDataMap().putString("message", "this is test message");
+        dataMap.getDataMap().putAsset("img", createAssetFromBitmap(bmp));
+        dataMap.getDataMap().putString("img_name", imgName);
+        dataMap.getDataMap().putString("anim_group", animGroup);
         dataMap.getDataMap().putLong("timestamp", System.currentTimeMillis());
         PutDataRequest request = dataMap.asPutDataRequest();
         wearPendingResult = Wearable.DataApi.putDataItem(wearClient,  request);
@@ -972,6 +1672,141 @@ public class MainFragment extends Fragment implements GoogleApiClient.Connection
         public void onFragmentInteraction(Uri uri);
     }
 
+    private void processNotification(Bundle bundle, boolean removeNotification) {
+        String msg = "";
+        try{
+            msg = bundle.getString("message", "");
+        }catch (NullPointerException e){
+            e.printStackTrace();
+        }
+
+        final NotificationManager mNotificationManager = (NotificationManager)
+                getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
+
+//        PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
+//                new Intent(this, NotificationActivity.class), 0);
+
+
+        //TODO: check for priority in notification
+        final NotificationCompat.Builder mBuilder =
+                new NotificationCompat.Builder(getActivity())
+                        .setSmallIcon(R.drawable.ic_launcher)
+                        .setContentTitle("Downloading Pets...")
+                        .setStyle(new NotificationCompat.BigTextStyle()
+                                .bigText(msg))
+                        .setContentText(msg);
+
+
+        mBuilder.setAutoCancel(true);
+//        mBuilder.setContentIntent(contentIntent);
+        //TODO: set NOTIFICATION_ID constant. this is for testing purposes
+        if(!removeNotification) {
+            mBuilder.setProgress(0, 0, true);
+            mNotificationManager.notify(1, mBuilder.build());
+        }else {
+            mBuilder.setProgress(0, 0, false);
+            mNotificationManager.notify(1, mBuilder.build());
+            mNotificationManager.cancel(1);
+        }
+
+//        new Thread(
+//                new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        int incr;
+//                        // Do the "lengthy" operation 20 times
+//                        for (incr = 0; incr <= 100; incr+=5) {
+//                            // Sets the progress indicator to a max value, the
+//                            // current completion percentage, and "determinate"
+//                            // state
+//                            mBuilder.setProgress(0, 0, true);
+//                            // Displays the progress bar for the first time.
+//                            mNotificationManager.notify(1, mBuilder.build());
+//                            // Sleeps the thread, simulating an operation
+//                            // that takes time
+//                            try {
+//                                // Sleep for 5 seconds
+//                                Thread.sleep(5*1000);
+//                            } catch (InterruptedException e) {
+//                                Log.d("notification", "sleep failure");
+//                            }
+//                        }
+//                        // When the loop is finished, updates the notification
+//                        mBuilder.setContentText("Download complete")
+//                                // Removes the progress bar
+//                                .setProgress(0,0,false);
+//                        mNotificationManager.notify(1, mBuilder.build());
+//                    }
+//                }
+//// Starts the thread by calling the run() method in its Runnable
+//        ).start();
+    }
+
+    public static Bitmap getBitmapFromURL(String link) {
+    /*--- this method downloads an Image from the given URL,
+     *  then decodes and returns a Bitmap object
+     ---*/
+        try {
+            URL url = new URL(link);
+            HttpURLConnection connection = (HttpURLConnection) url
+                    .openConnection();
+            connection.setDoInput(true);
+            connection.connect();
+            InputStream input = connection.getInputStream();
+            Bitmap myBitmap = BitmapFactory.decodeStream(input);
+
+            return myBitmap;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.e("getBmpFromUrl error: ", e.getMessage().toString());
+            return null;
+        }
+    }
+
+    private void saveImageToSD() {
+        Bitmap bmp = null;
+        FileOutputStream fos = null;
+
+    /*--- this method will save your downloaded image to SD card ---*/
+
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+    /*--- you can select your preferred CompressFormat and quality.
+     * I'm going to use JPEG and 100% quality ---*/
+        bmp.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+    /*--- create a new file on SD card ---*/
+        File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+                + File.separator + "myDownloadedImage.jpg");
+        try {
+            file.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    /*--- create a new FileOutputStream and write bytes to file ---*/
+        try {
+            fos = new FileOutputStream(file);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        try {
+            fos.write(bytes.toByteArray());
+            fos.close();
+            Toast.makeText(getActivity(), "Image saved", Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
+    private void imageDownloader(){
+        DownloadManager dlManager = (DownloadManager) getActivity().getSystemService(Context.DOWNLOAD_SERVICE);
+
+        DownloadManager.Request request = new DownloadManager.Request(Uri.parse("http://localhost:8081/fitpet/cat_animations_compressed/cat-trick3_compressed/cat_trick30001.png"));
+
+        dlManager.enqueue(request);
+    }
+
     private class ItemsAdapter extends BaseAdapter{
         Context context;
         ArrayList<String> list;
@@ -1013,4 +1848,115 @@ public class MainFragment extends Fragment implements GoogleApiClient.Connection
         }
     }
 
+    private class ImageDownloadTask extends AsyncTask<String, Intent, String>{
+        private Context context;
+        private ArrayList<String> listUrls;
+
+        public ImageDownloadTask(Context context, ArrayList<String> listUrls) {
+            this.context = context;
+            this.listUrls = listUrls;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+            Bundle msgBundle = new Bundle();
+            msgBundle.putString("message", "Downloading... Please wait");
+            processNotification(null, false);
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+
+            processNotification(null, true);
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+            return downloadFiles(listUrls);
+        }
+
+        private String downloadFiles(ArrayList<String> listUrls){
+            String result = "";
+            int count = 0;
+
+            for(String url : listUrls){
+                String[] temp = url.split(Pattern.quote("/"));
+                String filename = temp[temp.length - 1];
+                String folderName = temp[temp.length - 2];
+                saveImageToSD(getBitmapFromURL(url), filename, folderName);
+                count++;
+            }
+
+            if(count == listUrls.size()){
+                result = "successfully downloaded all images";
+            }else{
+                result = "Some images are not successfully downloaded";
+            }
+
+            return result;
+        }
+
+        public Bitmap getBitmapFromURL(String link) {
+    /*--- this method downloads an Image from the given URL,
+     *  then decodes and returns a Bitmap object
+     ---*/
+            try {
+                URL url = new URL(link);
+                HttpURLConnection connection = (HttpURLConnection) url
+                        .openConnection();
+                connection.setDoInput(true);
+                connection.connect();
+                InputStream input = connection.getInputStream();
+                Bitmap myBitmap = BitmapFactory.decodeStream(input);
+
+                return myBitmap;
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                Log.e("getBmpFromUrl error: ", e.getMessage().toString());
+                return null;
+            }
+        }
+
+        private void saveImageToSD(Bitmap bmp, String filename, String folderName) {
+//            Bitmap bmp = null;
+            FileOutputStream fos = null;
+
+    /*--- this method will save your downloaded image to SD card ---*/
+
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+    /*--- you can select your preferred CompressFormat and quality.
+     * I'm going to use JPEG and 100% quality ---*/
+            bmp.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+    /*--- create a new file on SD card ---*/
+            File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+                    + File.separator + "fitpet" + File.separator + folderName);
+            try {
+                file.mkdirs();
+                file.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            File mediaFile = new File(file.getPath() + File.separator + filename);
+    /*--- create a new FileOutputStream and write bytes to file ---*/
+            try {
+                fos = new FileOutputStream(mediaFile);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            try {
+                fos.write(bytes.toByteArray());
+                fos.close();
+//                Toast.makeText(getActivity(), "Image saved", Toast.LENGTH_SHORT).show();
+                Log.d("image", filename + " saved");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
 }

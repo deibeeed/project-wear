@@ -10,6 +10,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.support.v4.widget.DrawerLayout;
 
+import com.kfast.uitest.fragments.AnimPlayFragment;
 import com.kfast.uitest.fragments.MainFragment;
 import com.kfast.uitest.fragments.NavigationDrawerFragment;
 
@@ -56,6 +57,9 @@ public class MainActivity extends ActionBarActivity
                 break;
             case 1:
                 startActivity(new Intent(this, SettingsActivity.class));
+                break;
+            case 2:
+                transaction.replace(R.id.container, AnimPlayFragment.newInstance(), "AnimationPlay");
                 break;
         }
 

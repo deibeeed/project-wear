@@ -2,6 +2,7 @@ package com.kfast.uitest.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Parcelable;
 
 /**
  * Created by David on 2015-02-13.
