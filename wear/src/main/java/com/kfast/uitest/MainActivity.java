@@ -161,6 +161,7 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
         handler = new Handler();
         listAnimIds = new ArrayList<Integer>();
         petHappiness = 0;
+        stillAnimationPosition = 1;
 
         motionHandler = new Handler();
 
@@ -693,33 +694,33 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
 
 		switch (direction) {
 		case SimpleGestureFilter.SWIPE_LEFT:
-//            Log.d("config_swipe", "idle_time: " + PreferenceHelper.getInstance(this).getInt(Config.Keys.KEY_IDLE_TIME, Config.IDLE_TIME));
             if(isSwipeLeftUnlocked) {
-                playAnimalAnim(R.drawable.fetch);
+//                playAnimalAnim(R.drawable.fetch);
+//                startAnimation(true);
 
-                startAnimation(true);
+                playAnimationFromDisk("trick4");
             }
             else
                 Toast.makeText(this, "Not enough steps, trick Fetch is not yet unlocked!", Toast.LENGTH_SHORT).show();
 
 			break;
 		case SimpleGestureFilter.SWIPE_UP:
-//            Log.d("config_swipe", "steps_to_moral_loss: " + PreferenceHelper.getInstance(this).getInt(Config.Keys.KEY_STEP_MORAL_LOSS, Config.NUM_STEPS_TO_TRIGGER_MORAL_LOSS));
             if(isSwipeUpUnlocked) {
-                playAnimalAnim(R.drawable.roll_over);
+//                playAnimalAnim(R.drawable.roll_over);
+//                startAnimation(true);
 
-                startAnimation(true);
+                playAnimationFromDisk("trick2");
             }
             else
                 Toast.makeText(this, "Not enough steps, trick Roll Over is not yet unlocked!", Toast.LENGTH_SHORT).show();
 
 			break;
 		case SimpleGestureFilter.SWIPE_RIGHT:
-//            Log.d("config_swipe", "progress_steps: " + PreferenceHelper.getInstance(this).getInt(Config.Keys.KEY_PROGRESS_STEPS, Config.PROGRESS_BAR_STEPS));
             if(isSwipeRightUnlocked) {
-                playAnimalAnim(R.drawable.play_dead);
+//                playAnimalAnim(R.drawable.play_dead);
+//                startAnimation(true);
 
-                startAnimation(true);
+                playAnimationFromDisk("trick3");
             }
             else
                 Toast.makeText(this, "Not enough steps, trick Play Dead is not yet unlocked!", Toast.LENGTH_SHORT).show();
@@ -727,9 +728,10 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
 			break;
 		case SimpleGestureFilter.SWIPE_DOWN:
             if(isSwipeDownUnlocked) {
-                playAnimalAnim(R.drawable.scratch_the_ear);
+//                playAnimalAnim(R.drawable.scratch_the_ear);
+//                startAnimation(true);
 
-                startAnimation(true);
+                playAnimationFromDisk("trick4");
             }
             else
                 Toast.makeText(this, "Not enough steps, trick Scratch the Ear is not yet unlocked!", Toast.LENGTH_SHORT).show();
@@ -764,9 +766,10 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
 
 	@Override
 	public void onDoubleTap() {
-		playAnimalAnim(R.drawable.hold_still_b);
+//		playAnimalAnim(R.drawable.hold_still_b);
+//        startAnimation(true);
 
-        startAnimation(true);
+        playAnimationFromDisk("trick4");
 //		hideSlideLayouts();
 	}
 
@@ -925,10 +928,11 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
 //                        }
 //                    }, Config.REFRESH_ANIM * 1000);
 
-                    playAnimalAnim(listAnimIds.get(stillAnimationPosition));
+//                    playAnimalAnim(listAnimIds.get(stillAnimationPosition));
+                    playAnimationFromDisk("still" + stillAnimationPosition);
 
-                    if(stillAnimationPosition == listAnimIds.size() - 1)
-                        stillAnimationPosition = 0;
+                    if(/*stillAnimationPosition == listAnimIds.size() - 1*/ stillAnimationPosition == 3)
+                        stillAnimationPosition = 1;
                     else
                         stillAnimationPosition++;
                 }else{
@@ -1057,7 +1061,7 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
                         for(String imgName : animationDirectory.getAnimationItem()){
                             String imgPath = getExternalCacheDir() + "/" + imgName;
                             Log.d("path_to_exec", "img path: " + imgPath + " imgGroup: " + animationDirectory.getAnimationGroup());
-                            animationDrawable.addFrame(new BitmapDrawable(BitmapFactory.decodeFile(imgPath)), 55);
+                            animationDrawable.addFrame(new BitmapDrawable(BitmapFactory.decodeFile(imgPath)), 65);
                         }
 
                         break;
@@ -1068,7 +1072,12 @@ public class MainActivity extends Activity implements SimpleGestureFilter.Simple
             }
 
             canvas.setImageDrawable(animationDrawable);
-            animationDrawable.setOneShot(false);
+
+            if(action.contains("run") || action.contains("walk"))
+                animationDrawable.setOneShot(false);
+            else
+                animationDrawable.setOneShot(true);
+
             animationDrawable.start();
         }
 

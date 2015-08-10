@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/menu_home"
+            android:title="@string/menu_nav_home"
+            android:checked="true" />
+        <item
+            android:id="@+id/menu_my_pets"
+            android:title="@string/menu_nav_my_pets" />
+        <item
+            android:id="@+id/menu_store"
+            android:title="@string/menu_nav_store" />
+        <item
+            android:id="@+id/menu_animation"
+            android:title="@string/menu_nav_animation" />
+        <item
+            android:id="@+id/menu_settings"
+            android:title="@string/menu_nav_settings" />
+    </group>
+</menu>

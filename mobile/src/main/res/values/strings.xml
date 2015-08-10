@@ -35,9 +35,22 @@
     </string-array>
     <string name="title_activity_main">MainActivity</string>
 
-    <string name="nav_menu_title1">Home</string>
-    <string name="nav_menu_title2">Settings</string>
-    <string name="nav_menu_title3">Animation</string>
+    <!-- menu strings -->
+    <string name="menu_nav_home">Home</string>
+    <string name="menu_nav_settings">Settings</string>
+    <string name="menu_nav_animation">Animation</string>
+    <string name="menu_nav_my_pets">My Pets</string>
+    <string name="menu_nav_store">Store</string>
+
+    <!-- textview strings -->
+    <string name="tv_active_pet">Active Pet</string>
+    <string name="tv_available_pet">Your Available Pets</string>
+    <string name="tv_latest_pets">Latest Pets</string>
+    <string name="tv_about_the_pet">About the pet</string>
+
+    <!-- button strings -->
+    <string name="btn_add_as_favorite">Add as Favorite</string>
+    <string name="btn_buy_pet">Buy Pet</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
@@ -46,5 +59,7 @@
 
 <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_activity_base">BaseActivity</string>
+    <string name="title_activity_pet_item">Your Pet</string>
 
 </resources>

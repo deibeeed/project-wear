@@ -2,15 +2,15 @@
 
     <!-- These settings headers are only used on tablets. -->
 
-    <!--<header android:fragment="com.kfast.uitest.SettingsActivity$GeneralPreferenceFragment"-->
+    <!--<header android:fragment="com.kfast.uitest.activity.SettingsActivity$GeneralPreferenceFragment"-->
         <!--android:title="@string/pref_header_general" />-->
 
-    <!--<header android:fragment="com.kfast.uitest.SettingsActivity$NotificationPreferenceFragment"-->
+    <!--<header android:fragment="com.kfast.uitest.activity.SettingsActivity$NotificationPreferenceFragment"-->
         <!--android:title="@string/pref_header_notifications" />-->
 
-    <!--<header android:fragment="com.kfast.uitest.SettingsActivity$DataSyncPreferenceFragment"-->
+    <!--<header android:fragment="com.kfast.uitest.activity.SettingsActivity$DataSyncPreferenceFragment"-->
         <!--android:title="@string/pref_header_data_sync" />-->
     <header android:title="@string/action_settings"
-        android:fragment="com.kfast.uitest.SettingsActivity$SettingsPreferenceFragment"/>
+        android:fragment="com.kfast.uitest.activity.SettingsActivity$SettingsPreferenceFragment"/>
 
 </preference-headers>

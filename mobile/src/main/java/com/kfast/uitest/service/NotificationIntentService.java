@@ -50,7 +50,7 @@ public class NotificationIntentService extends IntentService {
         //TODO: check for priority in notification
         final NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(this)
-                        .setSmallIcon(R.drawable.ic_launcher)
+                        .setSmallIcon(R.mipmap.ic_launcher)
                         .setContentTitle("Downloading Pets...")
                         .setStyle(new NotificationCompat.BigTextStyle()
                                 .bigText(msg))

@@ -1,103 +1,95 @@
 package com.kfast.uitest;
 
 import android.content.Intent;
-import android.net.Uri;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v4.app.FragmentManager;
 import android.os.Bundle;
+import android.preference.PreferenceActivity;
+import android.support.design.widget.NavigationView;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.support.v4.widget.DrawerLayout;
 
+import com.kfast.uitest.activity.SettingsActivity;
 import com.kfast.uitest.fragments.AnimPlayFragment;
 import com.kfast.uitest.fragments.MainFragment;
-import com.kfast.uitest.fragments.NavigationDrawerFragment;
+import com.kfast.uitest.fragments.MyPetFragment;
+import com.kfast.uitest.fragments.StoreFragment;
 
 
-public class MainActivity extends ActionBarActivity
-        implements NavigationDrawerFragment.NavigationDrawerCallbacks, MainFragment.OnFragmentInteractionListener {
+public class MainActivity extends BaseActivity {
 
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
      */
-    private NavigationDrawerFragment mNavigationDrawerFragment;
 
     /**
      * Used to store the last screen title. For use in {@link #restoreActionBar()}.
      */
     private CharSequence mTitle;
 
+    private NavigationView navigationView;
+    private DrawerLayout layoutDrawer;
+
+    FragmentManager fragmentManager;
+    FragmentTransaction transaction;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        initializeToolbar();
 
-        getSupportActionBar().setTitle("");
+        navigationView = (NavigationView) findViewById(R.id.navigation_view);
+        layoutDrawer = (DrawerLayout) findViewById(R.id.drawer_layout);
 
-        mNavigationDrawerFragment = (NavigationDrawerFragment)
-                getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
-        mTitle = getTitle();
+        fragmentManager = getSupportFragmentManager();
 
-        // Set up the drawer.
-        mNavigationDrawerFragment.setUp(
-                R.id.navigation_drawer,
-                (DrawerLayout) findViewById(R.id.drawer_layout));
+        fragmentManager.beginTransaction().replace(R.id.container, MainFragment.newInstance(), "MainFragment").commit();
+
+        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(MenuItem menuItem) {
+
+                transaction = fragmentManager.beginTransaction();
+
+                menuItem.setChecked(true);
+
+                switch (menuItem.getItemId()){
+                    case R.id.menu_home:
+                        setAppBarTitle(getString(R.string.menu_nav_home));
+                        transaction.replace(R.id.container, MainFragment.newInstance(), "MainFragment");
+                        break;
+                    case R.id.menu_my_pets:
+                        setAppBarTitle(getString(R.string.menu_nav_my_pets));
+                        transaction.replace(R.id.container, MyPetFragment.newInstance(), "MyPetsFragment");
+                        break;
+                    case R.id.menu_store:
+                        setAppBarTitle(getString(R.string.menu_nav_store));
+                        transaction.replace(R.id.container, StoreFragment.newInstance(), "StoreFragment");
+                        break;
+                    case R.id.menu_animation:
+                        setAppBarTitle(getString(R.string.menu_nav_animation));
+                        transaction.replace(R.id.container, AnimPlayFragment.newInstance(), "AnimationPlay");
+                        break;
+                    case R.id.menu_settings:
+                        startActivity(new Intent(MainActivity.this, SettingsActivity.class));
+                        break;
+                }
+
+                transaction.commit();
+                layoutDrawer.closeDrawers();
+
+                return true;
+            }
+        });
+
     }
-
-    @Override
-    public void onNavigationDrawerItemSelected(int position) {
-        // update the main content by replacing fragments
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-
-        switch (position){
-            case 0:
-                transaction.replace(R.id.container, MainFragment.newInstance(), "MainFragment");
-                break;
-            case 1:
-                startActivity(new Intent(this, SettingsActivity.class));
-                break;
-            case 2:
-                transaction.replace(R.id.container, AnimPlayFragment.newInstance(), "AnimationPlay");
-                break;
-        }
-
-        transaction.commit();
-    }
-
-    public void onSectionAttached(int number) {
-        switch (number) {
-            case 1:
-                mTitle = getString(R.string.nav_menu_title1);
-                break;
-            case 2:
-                mTitle = getString(R.string.nav_menu_title2);
-                break;
-            case 3:
-                mTitle = getString(R.string.nav_menu_title3);
-                break;
-        }
-    }
-
-//    public void restoreActionBar() {
-//        ActionBar actionBar = getSupportActionBar();
-//        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
-//        actionBar.setDisplayShowTitleEnabled(true);
-//        actionBar.setTitle(mTitle);
-//    }
 
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        if (!mNavigationDrawerFragment.isDrawerOpen()) {
-            // Only show items in the action bar relevant to this screen
-            // if the drawer is not showing. Otherwise, let the drawer
-            // decide what to show in the action bar.
-//            getMenuInflater().inflate(R.menu.my, menu);
-//            restoreActionBar();
-            return true;
-        }
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -108,16 +100,12 @@ public class MainActivity extends ActionBarActivity
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        switch (id){
+            case android.R.id.home:
+                layoutDrawer.openDrawer(GravityCompat.START);
+                return true;
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public void onFragmentInteraction(Uri uri) {
-
     }
 }
